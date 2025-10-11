@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFormulaStore } from '@/lib/state/store';
 
 const WIDTH = 700;
@@ -14,6 +14,40 @@ function mapY(y: number, ymin: number, ymax: number) {
   return HEIGHT - PAD - t * (HEIGHT - 2*PAD);
 }
 
+type QuadraticData = {
+  path: string;
+  points: [number, number][];
+  roots: number[];
+  discr: number;
+  vertex: [number, number];
+};
+
+function computeQuadraticData(a: number, b: number, c: number): QuadraticData {
+  const xmin = -10, xmax = 10;
+  const step = 0.05;
+  const pts: [number, number][] = [];
+  let ymin = Infinity, ymax = -Infinity;
+  for (let x = xmin; x <= xmax; x += step) {
+    const y = a*x*x + b*x + c;
+    ymin = Math.min(ymin, y);
+    ymax = Math.max(ymax, y);
+    pts.push([x, y]);
+  }
+  if (ymax === ymin) { ymax = ymin + 1; }
+  const d = pts.map((p,i) => `${i===0?'M':'L'} ${mapX(p[0],-10,10)} ${mapY(p[1],ymin,ymax)}`).join(' ');
+  const D = b*b - 4*a*c;
+  const rootVals: number[] = [];
+  if (a !== 0 && D >= 0) {
+    const sqrtD = Math.sqrt(D);
+    rootVals.push((-b + sqrtD)/(2*a));
+    rootVals.push((-b - sqrtD)/(2*a));
+  }
+  const vx = (a !== 0) ? -b/(2*a) : 0;
+  const vy = a*vx*vx + b*vx + c;
+  const vertex: [number, number] = [vx, vy];
+  return { path: d, points: pts, roots: rootVals, discr: D, vertex };
+}
+
 export default function CanvasQuadratic() {
   const { vars } = useFormulaStore();
   const a = vars.a ?? 1;
@@ -21,31 +55,27 @@ export default function CanvasQuadratic() {
   const c = vars.c ?? 0;
   const [trails, setTrails] = useState<string[]>([]);
   const lastPath = useRef<string>('');
+  const frameRef = useRef<number | null>(null);
+  const latestVars = useRef({ a, b, c });
+  const [{ path, points, roots, discr, vertex }, setData] = useState<QuadraticData>(() => computeQuadraticData(a, b, c));
 
-  const { path, points, roots, discr, vertex } = useMemo(() => {
-    const xmin = -10, xmax = 10;
-    const step = 0.05;
-    const pts: [number, number][] = [];
-    let ymin = Infinity, ymax = -Infinity;
-    for (let x = xmin; x <= xmax; x += step) {
-      const y = a*x*x + b*x + c;
-      ymin = Math.min(ymin, y);
-      ymax = Math.max(ymax, y);
-      pts.push([x, y]);
+  useEffect(() => {
+    latestVars.current = { a, b, c };
+    if (frameRef.current !== null) {
+      return;
     }
-    if (ymax === ymin) { ymax = ymin + 1; }
-    const d = pts.map((p,i) => `${i===0?'M':'L'} ${mapX(p[0],-10,10)} ${mapY(p[1],ymin,ymax)}`).join(' ');
-    const D = b*b - 4*a*c;
-    const rootVals: number[] = [];
-    if (a !== 0 && D >= 0) {
-      const sqrtD = Math.sqrt(D);
-      rootVals.push((-b + sqrtD)/(2*a));
-      rootVals.push((-b - sqrtD)/(2*a));
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null;
+      const next = computeQuadraticData(latestVars.current.a, latestVars.current.b, latestVars.current.c);
+      setData(prev => (prev.path === next.path ? prev : next));
+    });
+  }, [a, b, c]);
+
+  useEffect(() => () => {
+    if (frameRef.current !== null) {
+      cancelAnimationFrame(frameRef.current);
     }
-    const vx = (a !== 0) ? -b/(2*a) : 0;
-    const vy = a*vx*vx + b*vx + c;
-    return { path: d, points: pts, roots: rootVals, discr: D, vertex: [vx, vy] as [number, number] };
-  }, [a,b,c]);
+  }, []);
 
   useEffect(()=>{
     if (lastPath.current && lastPath.current !== path) {
