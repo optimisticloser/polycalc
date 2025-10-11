@@ -1,6 +1,7 @@
 import type { Vars } from '@/lib/state/store';
 import QuadraticView from '@/modules/views/QuadraticView';
 import ProjectileView from '@/modules/views/ProjectileView';
+import SineView from '@/modules/views/SineView';
 
 export type Preset = { id: string; title: string; vars: Vars };
 export type FormulaDef = {
@@ -33,6 +34,17 @@ export const registry: FormulaDef[] = [
       { id:'60deg', title:'60°', vars:{ theta: Math.PI/3 }},
     ],
     view: ProjectileView,
+  },
+  {
+    id: 'sine',
+    title: 'Sine / SHM',
+    defaults: { A: 1, omega: 1, phi: 0 },
+    presets: [
+      { id:'baseline', title:'Baseline', vars:{ A:1, omega:1, phi:0 }},
+      { id:'big-amplitude', title:'A = 3', vars:{ A:3 }},
+      { id:'phase-shift', title:'Phase shift', vars:{ phi: Math.PI/4 }},
+    ],
+    view: SineView,
   },
 ];
 
