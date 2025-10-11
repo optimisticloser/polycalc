@@ -1,11 +1,22 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFormulaStore } from '@/lib/state/store';
 import { askTutor } from '@/lib/ai/client';
+import { deletePreset, listPresets, savePreset } from '@/lib/presets/local';
+
+type LocalPreset = ReturnType<typeof listPresets>[number];
 
 export default function ChatPanel() {
-  const { messages, setMessages, actions } = useFormulaStore();
+  const { messages, setMessages, actions, formulaId, vars, setMany } = useFormulaStore();
   const [input, setInput] = useState('What happens if I double a?');
+  const [showPresets, setShowPresets] = useState(false);
+  const [presets, setPresets] = useState<LocalPreset[]>([]);
+
+  useEffect(() => {
+    if (showPresets) {
+      setPresets(listPresets(formulaId));
+    }
+  }, [showPresets, formulaId]);
 
   async function onSend() {
     const next = [...messages, { role:'user', content: input }];
@@ -15,9 +26,71 @@ export default function ChatPanel() {
     setInput('');
   }
 
+  function onSavePreset() {
+    savePreset(formulaId, vars);
+    setShowPresets(true);
+    setPresets(listPresets(formulaId));
+  }
+
+  function togglePresets() {
+    setShowPresets((prev) => !prev);
+    if (!showPresets) {
+      setPresets(listPresets(formulaId));
+    }
+  }
+
+  function onApplyPreset(preset: LocalPreset) {
+    setMany(preset.vars);
+    setShowPresets(false);
+  }
+
+  function onDeletePreset(id: string) {
+    deletePreset(formulaId, id);
+    setPresets(listPresets(formulaId));
+  }
+
   return (
     <div className="border-l border-zinc-200 flex flex-col h-full">
-      <div className="p-3 font-semibold">AI Tutor</div>
+      <div className="p-3 flex items-center justify-between gap-3">
+        <div className="font-semibold">AI Tutor</div>
+        <div className="flex items-center gap-2 text-xs">
+          <button className="px-2 py-1 border rounded" onClick={onSavePreset}>
+            Save preset
+          </button>
+          <button className="px-2 py-1 border rounded" onClick={togglePresets}>
+            {showPresets ? 'Hide' : 'View'}
+          </button>
+        </div>
+      </div>
+      {showPresets && (
+        <div className="px-3 pb-3 text-xs space-y-2">
+          {presets.length === 0 ? (
+            <div className="text-zinc-500">No presets saved yet.</div>
+          ) : (
+            <ul className="space-y-2">
+              {presets.map((preset) => (
+                <li key={preset.id} className="border rounded p-2">
+                  <div className="font-medium mb-1">{preset.title}</div>
+                  <div className="flex gap-2">
+                    <button
+                      className="px-2 py-1 border rounded"
+                      onClick={() => onApplyPreset(preset)}
+                    >
+                      Apply
+                    </button>
+                    <button
+                      className="px-2 py-1 border rounded text-red-600"
+                      onClick={() => onDeletePreset(preset.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       <div className="px-3 pb-2 text-xs text-zinc-500">Recent actions</div>
       <ul className="px-3 text-xs space-y-1 max-h-28 overflow-auto">
         {actions.map((a,i)=>(<li key={i}>• {a}</li>))}
