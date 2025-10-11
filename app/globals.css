@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ring: 0 0% 0%;
+}
+html, body, #__next { height: 100%; }
+.scrub { cursor: ew-resize; border-bottom: 1px dashed currentColor; }
+kbd { background: #f4f4f5; border: 1px solid #e4e4e7; border-bottom-width: 2px; padding: 0 4px; border-radius: 4px; font-size: .8em; }
