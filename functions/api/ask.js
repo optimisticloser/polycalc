@@ -1,3 +1,21 @@
+import { clampResponseToolCalls, formulaSchema } from '../util/formula-schema.js';
+
+function inferFormulaId(body) {
+  if (body && typeof body.formulaId === 'string') {
+    return body.formulaId;
+  }
+  const messages = body?.messages;
+  if (Array.isArray(messages)) {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const content = messages[i]?.content;
+      if (typeof content !== 'string') continue;
+      const match = content.match(/formula(?:\s*id)?\s*[:=]\s*([a-z0-9_-]+)/i);
+      if (match) return match[1];
+    }
+  }
+  return undefined;
+}
+
 export const onRequest = async (context) => {
   const { request, env } = context;
   if (request.method === 'OPTIONS') {
@@ -22,16 +40,23 @@ export const onRequest = async (context) => {
     const messages = body.messages ?? [];
     const tools = body.tools ?? [];
 
+    let formulaId = inferFormulaId(body);
+    if (!formulaSchema[formulaId]) {
+      formulaId = 'quadratic';
+    }
+
     const base = env.PRIMARY_BASE_URL;
     const key = env.PRIMARY_API_KEY;
     const model = env.PRIMARY_MODEL || 'gpt-4o-mini';
 
     if (!base || !key) {
-      return new Response(JSON.stringify({
+      const mock = {
         role: 'assistant',
         content: 'Mock: Try increasing "a" to make the parabola steeper. Wire PRIMARY_* envs to call a real model.',
         tool_calls: [{ type: 'function', function: { name: 'setVariable', arguments: JSON.stringify({ name: 'a', value: 2 }) } }]
-      }), { headers: cors });
+      };
+      const guardedMock = clampResponseToolCalls(mock, formulaId);
+      return new Response(JSON.stringify(guardedMock), { headers: cors });
     }
 
     const payload = { model, messages, tools, tool_choice: 'auto' };
@@ -46,7 +71,8 @@ export const onRequest = async (context) => {
       return new Response(JSON.stringify({ error: 'Upstream error', detail: text }), { status: 502, headers: cors });
     }
     const data = await res.json();
-    return new Response(JSON.stringify(data), { headers: cors });
+    const guarded = clampResponseToolCalls(data, formulaId);
+    return new Response(JSON.stringify(guarded), { headers: cors });
   } catch (err) {
     return new Response(JSON.stringify({ error: 'Bad request', detail: String(err) }), { status: 400, headers: cors });
   }
