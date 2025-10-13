@@ -3,19 +3,54 @@ import { registry, getFormula, ids } from '@/modules/registry';
 import { useFormulaStore } from '@/lib/state/store';
 import { useEffect } from 'react';
 import ChatPanel from '@/components/ChatPanel';
+import { decodeVars, updateUrl } from '@/lib/state/url';
 
 export function generateStaticParams() {
   return ids.map(id => ({ id }));
 }
 
-export default function FormulaPage({ params }: { params: { id: string } }) {
+export default function FormulaPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const f = getFormula(params.id);
-  const { setFormula, setMany } = useFormulaStore();
+  const setFormula = useFormulaStore(s => s.setFormula);
+  const setMany = useFormulaStore(s => s.setMany);
+  const setStep = useFormulaStore(s => s.setStep);
+  const vars = useFormulaStore(s => s.vars);
+  const step = useFormulaStore(s => s.step);
+  const formulaId = useFormulaStore(s => s.formulaId);
+
+  const extractParam = (value: string | string[] | undefined) => {
+    if (typeof value === 'string') return value;
+    if (Array.isArray(value)) return value[0];
+    return undefined;
+  };
+
+  const queryVars = extractParam(searchParams?.vars);
+  const queryStep = extractParam(searchParams?.step);
 
   useEffect(()=>{
     setFormula(f.id, f.defaults);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [f.id]);
+    const decoded = decodeVars(queryVars);
+    if (decoded) {
+      setMany(decoded);
+    }
+    if (queryStep !== undefined) {
+      const parsed = parseInt(queryStep, 10);
+      setStep(Number.isNaN(parsed) ? 0 : parsed);
+    } else {
+      setStep(0);
+    }
+  }, [f.id, f.defaults, queryVars, queryStep, setFormula, setMany, setStep]);
+
+  useEffect(() => {
+    if (formulaId !== f.id) return;
+    updateUrl(f.id, vars, step, f.defaults);
+  }, [f.id, formulaId, vars, step, f.defaults]);
 
   const View = f.view;
 
