@@ -5,6 +5,14 @@
 :root {
   --ring: 0 0% 0%;
 }
+body {
+  background:
+    radial-gradient(circle at top left, rgba(253, 186, 116, 0.45), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(244, 63, 94, 0.35), transparent 50%),
+    linear-gradient(120deg, #fb923c 0%, #f43f5e 55%, #8b5cf6 100%);
+  background-attachment: fixed;
+  background-color: #fff7ed;
+}
 html, body, #__next { height: 100%; }
 .scrub { cursor: ew-resize; border-bottom: 1px dashed currentColor; }
 kbd { background: #f4f4f5; border: 1px solid #e4e4e7; border-bottom-width: 2px; padding: 0 4px; border-radius: 4px; font-size: .8em; }

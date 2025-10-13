@@ -16,31 +16,60 @@ function mapY(y: number, ymin: number, ymax: number) {
 
 export default function CanvasProjectile() {
   const { vars } = useFormulaStore();
-  const v0 = vars.v0 ?? 50;
-  const theta = vars.theta ?? Math.PI/4;
-  const g = vars.g ?? 9.81;
   const [trails, setTrails] = useState<string[]>([]);
   const lastPath = useRef<string>('');
 
-  const { path, points, range, apex } = useMemo(() => {
-    const vx = v0 * Math.cos(theta);
-    const vy = v0 * Math.sin(theta);
-    const T = (2 * vy) / g;
-    const R = vx * T;
-    const step = Math.max(0.01, T/200);
+  const { path, range, apex, bounds } = useMemo(() => {
+    const v0 = Number.isFinite(vars.v0) ? Math.max(0, vars.v0) : 0;
+    const theta = Number.isFinite(vars.theta) ? vars.theta : 0;
+    const g = Number.isFinite(vars.g) && vars.g > 0 ? vars.g : 9.81;
+
+    const vx = Number.isFinite(v0) ? v0 * Math.cos(theta) : 0;
+    const vy = Number.isFinite(v0) ? v0 * Math.sin(theta) : 0;
+    const rawT = (2 * vy) / g;
+    const T = Number.isFinite(rawT) && rawT > 0 ? rawT : 0;
+    const rawRange = vx * T;
+    const R = Number.isFinite(rawRange) && rawRange > 0 ? rawRange : 0;
+    const apexTime = T / 2;
+    const apexY =
+      Number.isFinite(apexTime)
+        ? vy * apexTime - 0.5 * g * apexTime * apexTime
+        : 0;
+    const apexX = Number.isFinite(apexTime) ? Math.max(0, vx * apexTime) : 0;
+
+    const xmin = 0;
+    const xmax = Math.max(10, R * 1.1);
+    const ymin = -1;
+    const ymax = Math.max(10, apexY * 1.2);
+
     const pts: [number, number][] = [];
-    let ymax = 0;
-    for (let t=0; t<=T; t+=step) {
-      const x = vx * t;
-      const y = vy * t - 0.5 * g * t * t;
-      ymax = Math.max(ymax, y);
-      pts.push([x,y]);
+    if (T > 0 && R > 0) {
+      const step = Math.max(0.01, T / 200);
+      for (let t = 0; t <= T + step / 2; t += step) {
+        const x = vx * t;
+        const y = vy * t - 0.5 * g * t * t;
+        const px = Number.isFinite(x) ? x : 0;
+        const py = Number.isFinite(y) ? y : 0;
+        pts.push([px, py]);
+      }
+      if (!pts.length || pts[pts.length - 1][0] !== R) {
+        pts.push([R, 0]);
+      }
+    } else {
+      pts.push([0, 0]);
     }
-    const xmin = 0, xmax = Math.max(10, R*1.1);
-    const ymin = -1, yMax = Math.max(10, ymax*1.2);
-    const d = pts.map((p,i)=>`${i===0?'M':'L'} ${mapX(p[0],xmin,xmax)} ${mapY(p[1],ymin,yMax)}`).join(' ');
-    return { path: d, points: pts, range: R, apex: ymax };
-  }, [v0, theta, g]);
+
+    const pathString = pts
+      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${mapX(p[0], xmin, xmax)} ${mapY(p[1], ymin, ymax)}`)
+      .join(' ');
+
+    return {
+      path: pathString,
+      range: R,
+      apex: { x: apexX, y: Number.isFinite(apexY) ? apexY : 0 },
+      bounds: { xmin, xmax, ymin, ymax },
+    };
+  }, [vars.v0, vars.theta, vars.g]);
 
   useEffect(()=>{
     if (lastPath.current && lastPath.current !== path) {
@@ -49,24 +78,28 @@ export default function CanvasProjectile() {
     lastPath.current = path;
   }, [path]);
 
-  let xmin=0, xmax=0, ymin=0, ymax=0;
-  if (points.length) {
-    xmin = 0; ymin = -1;
-    xmax = Math.max(10, points[points.length-1][0]*1.1);
-    ymax = Math.max(10, Math.max(...points.map(p=>p[1]))*1.2);
-  }
-
+  const { xmin, xmax, ymin, ymax } = bounds;
   const mapx = (x:number)=>mapX(x,xmin,xmax);
   const mapy = (y:number)=>mapY(y,ymin,ymax);
+  const displayRange = Math.max(0, range);
 
   return (
     <svg width={WIDTH} height={HEIGHT} className="border rounded bg-white">
       <line x1={mapx(0)} y1={mapy(0)} x2={mapx(xmax)} y2={mapy(0)} stroke="#eee" />
       {trails.map((t,i)=>(<path key={i} d={t} fill="none" stroke="#999" strokeWidth="1" />))}
       <path d={path} fill="none" stroke="#111" strokeWidth="2" />
-      <circle cx={mapx(xmax/2)} cy={mapy(apex)} r={4} fill="#0ea5e9" />
-      <line x1={mapx(0)} y1={mapy(0)} x2={mapx(range)} y2={mapy(0)} stroke="#ef4444" strokeDasharray="4 4" />
-      <text x={mapx(range)} y={mapy(0)-6} fontSize="12" textAnchor="end" fill="#ef4444">Range ≈ {range.toFixed(1)}</text>
+      <circle cx={mapx(range > 0 ? apex.x : 0)} cy={mapy(apex.y)} r={4} fill="#0ea5e9" />
+      <line
+        x1={mapx(0)}
+        y1={mapy(0)}
+        x2={mapx(displayRange)}
+        y2={mapy(0)}
+        stroke="#ef4444"
+        strokeDasharray="4 4"
+      />
+      <text x={mapx(displayRange)} y={mapy(0)-6} fontSize="12" textAnchor="end" fill="#ef4444">
+        Range ≈ {displayRange.toFixed(1)}
+      </text>
     </svg>
   );
 }

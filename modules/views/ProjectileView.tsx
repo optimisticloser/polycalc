@@ -3,6 +3,7 @@ import NumberChip from '@/components/NumberChip';
 import CanvasProjectile from '@/components/CanvasProjectile';
 import ControlsProjectile from '@/components/ControlsProjectile';
 import { useFormulaStore } from '@/lib/state/store';
+import FormulaLine from '@/components/FormulaLine';
 
 export default function ProjectileView() {
   const { vars, setVar } = useFormulaStore();
@@ -13,6 +14,7 @@ export default function ProjectileView() {
         θ = <NumberChip value={vars.theta ?? Math.PI/4} onChange={v => setVar('theta', v)} label="theta" />
         g = <NumberChip value={vars.g ?? 9.81} onChange={v => setVar('g', v)} label="g" />
       </div>
+      <FormulaLine className="text-base text-zinc-700" />
       <CanvasProjectile />
       <ControlsProjectile />
     </div>

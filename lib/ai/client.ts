@@ -46,13 +46,34 @@ function parseOpenAIResponse(data: any) {
 }
 
 export async function askTutor(messages: ChatMessage[]) {
-  const res = await fetch('/api/ask', {
-    method: 'POST',
-    headers: { 'content-type':'application/json' },
-    body: JSON.stringify({ messages, tools: toolSchema })
-  });
-  const data = await res.json();
-  const { content, toolCalls } = parseOpenAIResponse(data);
-  if (toolCalls?.length) applyToolCalls(toolCalls);
-  return { content };
+  const fallbackContent =
+    'Tutor is unavailable right now. Verify your /api/ask setup and try again.';
+
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ messages, tools: toolSchema }),
+    });
+
+    const text = await res.text();
+    if (!text) {
+      return { content: fallbackContent };
+    }
+
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch (error) {
+      console.error('Tutor response was not valid JSON', error, text);
+      return { content: fallbackContent };
+    }
+
+    const { content, toolCalls } = parseOpenAIResponse(data);
+    if (toolCalls?.length) applyToolCalls(toolCalls);
+    return { content: content || fallbackContent };
+  } catch (error) {
+    console.error('Failed to reach tutor endpoint', error);
+    return { content: fallbackContent };
+  }
 }

@@ -3,6 +3,7 @@ import NumberChip from '@/components/NumberChip';
 import CanvasQuadratic from '@/components/CanvasQuadratic';
 import ControlsQuadratic from '@/components/ControlsQuadratic';
 import { useFormulaStore } from '@/lib/state/store';
+import FormulaLine from '@/components/FormulaLine';
 
 export default function QuadraticView() {
   const { vars, setVar } = useFormulaStore();
@@ -16,6 +17,7 @@ export default function QuadraticView() {
         x +
         <NumberChip value={vars.c ?? 0} onChange={v => setVar('c', v)} label="c" />
       </div>
+      <FormulaLine className="text-base text-zinc-700" />
       <CanvasQuadratic />
       <ControlsQuadratic />
     </div>
