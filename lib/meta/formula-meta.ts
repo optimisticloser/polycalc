@@ -422,12 +422,536 @@ export const eulerMeta: FormulaMeta = {
   ]
 };
 
+export const projectileMeta: FormulaMeta = {
+  id: 'projectile',
+  title: 'Projectile Motion',
+  description: 'Motion of an object under the influence of gravity',
+  
+  template: 'x(t) = {{v0}} cos({{theta}}) t, y(t) = {{v0}} sin({{theta}}) t - ½ g t²',
+  
+  variables: {
+    v0: {
+      id: 'v0',
+      symbol: 'v_0',
+      label: 'v₀',
+      name: 'Initial Velocity',
+      description: 'Speed at which the projectile is launched',
+      contextualInfo: 'Higher values result in longer trajectories',
+      min: 1,
+      max: 50,
+      step: 1,
+      defaultValue: 20,
+      decimals: 1,
+      editable: true,
+      color: '#3b82f6',
+      aiContext: 'Initial velocity determines how far and how high the projectile will travel',
+      aiHints: [
+        'Doubling v0 roughly quadruples the range',
+        'v0 affects both horizontal distance and maximum height',
+        'Real projectiles have air resistance that reduces effective range'
+      ]
+    },
+    theta: {
+      id: 'theta',
+      symbol: '\\theta',
+      label: 'θ',
+      name: 'Launch Angle',
+      description: 'Angle above the horizontal at which the projectile is launched',
+      contextualInfo: '45° gives maximum range in ideal conditions',
+      min: 0,
+      max: 90,
+      step: 1,
+      defaultValue: 45,
+      decimals: 0,
+      editable: true,
+      color: '#ef4444',
+      format: 'angle',
+      aiContext: 'Launch angle affects the shape of the trajectory - low angles give flat trajectories, high angles give tall trajectories',
+      aiHints: [
+        '45° gives the maximum range in a vacuum',
+        '30° and 60° give the same range but different maximum heights',
+        'Small angles are useful for horizontal distance, large angles for height'
+      ]
+    },
+    g: {
+      id: 'g',
+      symbol: 'g',
+      label: 'g',
+      name: 'Gravity',
+      description: 'Acceleration due to gravity',
+      contextualInfo: 'Earth gravity is approximately 9.8 m/s²',
+      min: 1,
+      max: 20,
+      step: 0.1,
+      defaultValue: 9.8,
+      decimals: 1,
+      editable: true,
+      color: '#10b981',
+      aiContext: 'Gravity pulls the projectile downward, creating the parabolic trajectory',
+      aiHints: [
+        'Lower gravity (like on the Moon) results in much longer trajectories',
+        'Higher gravity (like on Jupiter) makes trajectories much shorter',
+        'Gravity only affects vertical motion, not horizontal'
+      ]
+    }
+  },
+  
+  aiContext: 'Projectile motion follows a parabolic path due to constant gravitational acceleration',
+  aiScenarios: [
+    {
+      name: 'Maximum Range',
+      description: 'Optimal angle for maximum distance',
+      values: { v0: 20, theta: 45, g: 9.8 }
+    },
+    {
+      name: 'High Arc',
+      description: 'Tall trajectory with less horizontal distance',
+      values: { v0: 20, theta: 75, g: 9.8 }
+    },
+    {
+      name: 'Low Gravity',
+      description: 'Trajectory on the Moon',
+      values: { v0: 20, theta: 45, g: 1.6 }
+    }
+  ]
+};
+
+export const normalMeta: FormulaMeta = {
+  id: 'normal',
+  title: 'Normal Distribution',
+  description: 'The bell curve that describes many natural phenomena',
+  
+  template: 'f(x) = 1/({{sigma}} √(2π)) e^(-(x-{{mu}})²/(2{{sigma}}²))',
+  
+  variables: {
+    mu: {
+      id: 'mu',
+      symbol: '\\mu',
+      label: 'μ',
+      name: 'Mean',
+      description: 'The center of the distribution',
+      contextualInfo: 'Shifts the entire curve left or right',
+      min: -10,
+      max: 10,
+      step: 0.1,
+      defaultValue: 0,
+      decimals: 1,
+      editable: true,
+      color: '#3b82f6',
+      aiContext: 'The mean determines the center of the distribution, where the peak is located',
+      aiHints: [
+        '68% of values fall within one standard deviation of the mean',
+        'The mean is the average value in the distribution',
+        'In a normal distribution, mean = median = mode'
+      ]
+    },
+    sigma: {
+      id: 'sigma',
+      symbol: '\\sigma',
+      label: 'σ',
+      name: 'Standard Deviation',
+      description: 'Measure of spread or variability',
+      contextualInfo: 'Larger values create wider curves',
+      min: 0.1,
+      max: 5,
+      step: 0.1,
+      defaultValue: 1,
+      decimals: 1,
+      editable: true,
+      color: '#ef4444',
+      aiContext: 'Standard deviation controls how spread out the values are from the mean',
+      aiHints: [
+        'Small σ creates a tall, narrow curve',
+        'Large σ creates a short, wide curve',
+        'σ is the square root of the variance'
+      ]
+    }
+  },
+  
+  aiContext: 'The normal distribution appears throughout nature and statistics due to the Central Limit Theorem',
+  aiScenarios: [
+    {
+      name: 'Standard Normal',
+      description: 'Mean 0, Standard Deviation 1',
+      values: { mu: 0, sigma: 1 }
+    },
+    {
+      name: 'Wide Spread',
+      description: 'High variability',
+      values: { mu: 0, sigma: 3 }
+    },
+    {
+      name: 'Shifted Right',
+      description: 'Positive mean',
+      values: { mu: 3, sigma: 1 }
+    }
+  ]
+};
+
+export const gravityMeta: FormulaMeta = {
+  id: 'gravity',
+  title: 'Newton\'s Law of Universal Gravitation',
+  description: 'The force of attraction between two masses',
+  
+  template: 'F = G {{m1}} {{m2}} / {{r}}²',
+  
+  variables: {
+    m1: {
+      id: 'm1',
+      symbol: 'm_1',
+      label: 'm₁',
+      name: 'First Mass',
+      description: 'Mass of the first object',
+      contextualInfo: 'Larger masses create stronger gravitational forces',
+      min: 1,
+      max: 100,
+      step: 1,
+      defaultValue: 10,
+      decimals: 0,
+      editable: true,
+      color: '#3b82f6',
+      aiContext: 'The first mass contributes directly to the gravitational force',
+      aiHints: [
+        'Doubling m1 doubles the force',
+        'Mass is measured in kilograms',
+        'Earth has a mass of about 6×10²⁴ kg'
+      ]
+    },
+    m2: {
+      id: 'm2',
+      symbol: 'm_2',
+      label: 'm₂',
+      name: 'Second Mass',
+      description: 'Mass of the second object',
+      contextualInfo: 'Larger masses create stronger gravitational forces',
+      min: 1,
+      max: 100,
+      step: 1,
+      defaultValue: 5,
+      decimals: 0,
+      editable: true,
+      color: '#ef4444',
+      aiContext: 'The second mass contributes directly to the gravitational force',
+      aiHints: [
+        'Doubling m2 doubles the force',
+        'Force is proportional to the product of both masses',
+        'The Sun has about 333,000 times Earth\'s mass'
+      ]
+    },
+    r: {
+      id: 'r',
+      symbol: 'r',
+      label: 'r',
+      name: 'Distance',
+      description: 'Distance between the centers of the two objects',
+      contextualInfo: 'Force decreases rapidly with distance',
+      min: 1,
+      max: 50,
+      step: 0.5,
+      defaultValue: 10,
+      decimals: 1,
+      editable: true,
+      color: '#10b981',
+      aiContext: 'Distance has an inverse-square relationship with force',
+      aiHints: [
+        'Doubling the distance reduces force to 1/4',
+        'Tripling the distance reduces force to 1/9',
+        'This is why gravity is weak at large distances'
+      ]
+    }
+  },
+  
+  aiContext: 'Gravity is the weakest of the four fundamental forces but dominates at large scales',
+  aiScenarios: [
+    {
+      name: 'Earth-Moon',
+      description: 'Approximate Earth-Moon system',
+      values: { m1: 100, m2: 1, r: 30 }
+    },
+    {
+      name: 'Close Objects',
+      description: 'Strong force at short distance',
+      values: { m1: 50, m2: 50, r: 5 }
+    },
+    {
+      name: 'Distant Objects',
+      description: 'Weak force at large distance',
+      values: { m1: 50, m2: 50, r: 40 }
+    }
+  ]
+};
+
+export const logisticMeta: FormulaMeta = {
+  id: 'logistic',
+  title: 'Logistic Map',
+  description: 'A simple nonlinear recurrence relation that can exhibit complex behavior',
+  
+  template: 'x_{n+1} = {{r}} x_n (1 - x_n)',
+  
+  variables: {
+    r: {
+      id: 'r',
+      symbol: 'r',
+      label: 'r',
+      name: 'Growth Rate',
+      description: 'Parameter that controls the behavior of the system',
+      contextualInfo: 'Different values of r lead to different behaviors',
+      min: 0,
+      max: 4,
+      step: 0.01,
+      defaultValue: 2.5,
+      decimals: 2,
+      editable: true,
+      color: '#3b82f6',
+      aiContext: 'The growth rate parameter determines whether the system converges, oscillates, or becomes chaotic',
+      aiHints: [
+        'r < 1: population dies out',
+        '1 < r < 3: population converges to a stable value',
+        '3 < r < 3.57: population oscillates',
+        'r > 3.57: system becomes chaotic'
+      ]
+    },
+    x0: {
+      id: 'x0',
+      symbol: 'x_0',
+      label: 'x₀',
+      name: 'Initial Value',
+      description: 'Starting value of the sequence',
+      contextualInfo: 'Must be between 0 and 1',
+      min: 0.01,
+      max: 0.99,
+      step: 0.01,
+      defaultValue: 0.5,
+      decimals: 2,
+      editable: true,
+      color: '#ef4444',
+      aiContext: 'The initial value can affect the trajectory in chaotic regimes',
+      aiHints: [
+        'Values must be between 0 and 1',
+        'Different initial values can lead to different outcomes in chaotic regimes',
+        'Represents normalized population (0 = extinct, 1 = maximum)'
+      ]
+    }
+  },
+  
+  aiContext: 'The logistic map is a classic example of how simple nonlinear equations can produce complex, chaotic behavior',
+  aiScenarios: [
+    {
+      name: 'Stable Equilibrium',
+      description: 'Converges to a fixed point',
+      values: { r: 2.5, x0: 0.5 }
+    },
+    {
+      name: 'Period-2 Oscillation',
+      description: 'Alternates between two values',
+      values: { r: 3.2, x0: 0.5 }
+    },
+    {
+      name: 'Chaos',
+      description: 'Unpredictable behavior',
+      values: { r: 3.9, x0: 0.5 }
+    }
+  ]
+};
+
+export const idealGasMeta: FormulaMeta = {
+  id: 'ideal-gas',
+  title: 'Ideal Gas Law',
+  description: 'Relationship between pressure, volume, temperature and amount of gas',
+  
+  template: 'PV = nRT',
+  
+  variables: {
+    P: {
+      id: 'P',
+      symbol: 'P',
+      label: 'P',
+      name: 'Pressure',
+      description: 'Force exerted by gas per unit area',
+      contextualInfo: 'Increases when temperature increases or volume decreases',
+      min: 0.1,
+      max: 10,
+      step: 0.1,
+      defaultValue: 1,
+      decimals: 1,
+      editable: true,
+      color: '#3b82f6',
+      aiContext: 'Pressure is directly proportional to temperature and inversely proportional to volume',
+      aiHints: [
+        'Measured in atmospheres (atm) or pascals (Pa)',
+        'Higher pressure means more frequent molecular collisions',
+        'Pressure in car tires increases when driving (heating)'
+      ]
+    },
+    V: {
+      id: 'V',
+      symbol: 'V',
+      label: 'V',
+      name: 'Volume',
+      description: 'Space occupied by the gas',
+      contextualInfo: 'Expands when heated or pressure decreases',
+      min: 1,
+      max: 20,
+      step: 0.5,
+      defaultValue: 10,
+      decimals: 1,
+      editable: true,
+      color: '#ef4444',
+      aiContext: 'Volume is directly proportional to temperature and inversely proportional to pressure',
+      aiHints: [
+        'Measured in liters (L) or cubic meters (m³)',
+        'Balloons expand when heated (volume increases)',
+        'Gases expand to fill their containers'
+      ]
+    },
+    T: {
+      id: 'T',
+      symbol: 'T',
+      label: 'T',
+      name: 'Temperature',
+      description: 'Average kinetic energy of gas particles',
+      contextualInfo: 'Higher temperature means faster particle motion',
+      min: 100,
+      max: 500,
+      step: 10,
+      defaultValue: 300,
+      decimals: 0,
+      editable: true,
+      color: '#10b981',
+      aiContext: 'Temperature is directly proportional to pressure and volume',
+      aiHints: [
+        'Measured in Kelvin (K)',
+        '0 K is absolute zero - no particle motion',
+        'Room temperature is about 300 K (27°C)'
+      ]
+    },
+    n: {
+      id: 'n',
+      symbol: 'n',
+      label: 'n',
+      name: 'Moles',
+      description: 'Amount of gas particles',
+      contextualInfo: 'More particles mean more pressure',
+      min: 0.1,
+      max: 2,
+      step: 0.1,
+      defaultValue: 0.4,
+      decimals: 1,
+      editable: true,
+      color: '#f59e0b',
+      aiContext: 'The amount of gas is directly proportional to pressure and volume',
+      aiHints: [
+        'One mole contains 6.02×10²³ particles (Avogadro\'s number)',
+        'Moles relate mass to number of particles',
+        'Breathing in adds moles to your lungs'
+      ]
+    }
+  },
+  
+  aiContext: 'The ideal gas law approximates the behavior of many gases under normal conditions',
+  aiScenarios: [
+    {
+      name: 'Standard Conditions',
+      description: 'STP: Standard Temperature and Pressure',
+      values: { P: 1, V: 22.4, T: 273, n: 1 }
+    },
+    {
+      name: 'High Pressure',
+      description: 'Compressed gas',
+      values: { P: 5, V: 10, T: 300, n: 2 }
+    },
+    {
+      name: 'High Temperature',
+      description: 'Heated gas',
+      values: { P: 2, V: 10, T: 400, n: 0.4 }
+    }
+  ]
+};
+
+export const fourierMeta: FormulaMeta = {
+  id: 'fourier',
+  title: 'Fourier Series',
+  description: 'Approximating a square wave with sine waves',
+  
+  template: 's_N(t) = Σ_{k=0}^{N-1} 4/((2k+1)π) sin(2π(2k+1){{f0}} t)',
+  
+  variables: {
+    N: {
+      id: 'N',
+      symbol: 'N',
+      label: 'N',
+      name: 'Number of Terms',
+      description: 'How many sine waves to sum',
+      contextualInfo: 'More terms create a better approximation',
+      min: 1,
+      max: 20,
+      step: 1,
+      defaultValue: 5,
+      decimals: 0,
+      editable: true,
+      color: '#3b82f6',
+      aiContext: 'The number of terms determines how well the series approximates the square wave',
+      aiHints: [
+        'More terms reduce the Gibbs phenomenon',
+        'Each term adds higher frequency components',
+        'Infinite terms would perfectly reproduce the square wave'
+      ]
+    },
+    f0: {
+      id: 'f0',
+      symbol: 'f_0',
+      label: 'f₀',
+      name: 'Fundamental Frequency',
+      description: 'Base frequency of the square wave',
+      contextualInfo: 'Higher frequency makes the wave oscillate faster',
+      min: 0.1,
+      max: 5,
+      step: 0.1,
+      defaultValue: 1,
+      decimals: 1,
+      editable: true,
+      color: '#ef4444',
+      aiContext: 'The fundamental frequency determines the period of the wave',
+      aiHints: [
+        'Period T = 1/f₀',
+        'Higher frequency means shorter wavelength',
+        'Musical notes have specific frequencies'
+      ]
+    }
+  },
+  
+  aiContext: 'Fourier series show how complex waves can be built from simple sine waves',
+  aiScenarios: [
+    {
+      name: 'Good Approximation',
+      description: 'Multiple terms',
+      values: { N: 10, f0: 1 }
+    },
+    {
+      name: 'Rough Approximation',
+      description: 'Few terms',
+      values: { N: 3, f0: 1 }
+    },
+    {
+      name: 'High Frequency',
+      description: 'Fast oscillation',
+      values: { N: 5, f0: 3 }
+    }
+  ]
+};
+
 // Registro de metadados de fórmulas
 export const formulaMetaRegistry: Record<string, FormulaMeta> = {
   quadratic: quadraticMeta,
   'predator-prey': predatorPreyMeta,
   sine: sineMeta,
   euler: eulerMeta,
+  projectile: projectileMeta,
+  normal: normalMeta,
+  gravity: gravityMeta,
+  logistic: logisticMeta,
+  'ideal-gas': idealGasMeta,
+  fourier: fourierMeta,
 };
 
 // Função para obter metadados de uma fórmula

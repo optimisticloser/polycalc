@@ -15,4 +15,8 @@ export const toolSchema = [
       name: "reset", description: "Reset current or given formula",
       parameters: { type: "object", properties: { formulaId: {type:"string"} } }
   }},
+  { type: "function", function: {
+      name: "setMany", description: "Set many variables at once (scenario)",
+      parameters: { type: "object", properties: { patch: { type: "object", additionalProperties: { type: "number" }}}, required: ["patch"] }
+  }},
 ] as const;

@@ -121,14 +121,21 @@ export default function InlineVar({
       <span
         ref={elementRef}
         className={clsx(
-          'inline-flex items-center px-2 py-0.5 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer select-none',
-          meta.editable ? 'hover:bg-opacity-80 hover:scale-105' : 'cursor-default',
+          'inline-flex items-center px-2 py-0.5 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer select-none exploded-token',
+          meta.editable ? 'hover:bg-opacity-80 hover:scale-105 token-editable var-underline' : 'cursor-default',
           isDragging ? 'bg-opacity-90 scale-105 shadow-lg' : 'bg-opacity-70',
           meta.color ? `bg-[${meta.color}] bg-opacity-20` : 'bg-blue-100',
           meta.color ? `border-[${meta.color}]` : 'border-blue-300',
           hasChanged ? 'border-2' : 'border border-dashed',
           className
         )}
+        role={meta.editable ? "spinbutton" : "text"}
+        aria-label={meta.name}
+        aria-valuemin={meta.min}
+        aria-valuemax={meta.max}
+        aria-valuenow={value}
+        aria-description={meta.description}
+        tabIndex={meta.editable ? 0 : -1}
         style={{
           backgroundColor: meta.color ? `${meta.color}20` : undefined,
           borderColor: meta.color ? meta.color : undefined,
@@ -157,13 +164,6 @@ export default function InlineVar({
         }}
         onDoubleClick={onDoubleClick}
         onKeyDown={handleKeyDown}
-        tabIndex={meta.editable ? 0 : -1}
-        role={meta.editable ? "spinbutton" : "text"}
-        aria-label={meta.name}
-        aria-valuemin={meta.min}
-        aria-valuemax={meta.max}
-        aria-valuenow={value}
-        aria-description={meta.description}
       >
         <span className="font-mono">
           {displayValue}

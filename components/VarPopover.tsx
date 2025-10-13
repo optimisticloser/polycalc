@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { VariableMeta } from '@/lib/types/variable';
 import { useFormulaStore } from '@/lib/state/store';
-import { askTutor } from '@/lib/ai/client';
+import { askTutor, askTutorWithContext } from '@/lib/ai/client';
 
 type Props = {
   meta: VariableMeta;
@@ -11,6 +11,7 @@ type Props = {
   isVisible: boolean;
   position: { x: number; y: number } | null;
   onClose: () => void;
+  onAskTutor?: (message: string) => void;
 };
 
 export default function VarPopover({ 
@@ -23,7 +24,8 @@ export default function VarPopover({
 }: Props) {
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [isLoadingInsight, setIsLoadingInsight] = useState(false);
-  const { vars, formulaMeta } = useFormulaStore();
+  const [isAskingTutor, setIsAskingTutor] = useState(false);
+  const { vars, formulaMeta, setMessages, messages } = useFormulaStore();
   const hasAskedInsight = useRef(false);
 
   // Carrega insight da IA quando o popover fica visível
@@ -71,6 +73,32 @@ export default function VarPopover({
 
   const handleReset = () => {
     onChange(meta.defaultValue);
+  };
+
+  const handleAskTutor = async () => {
+    if (!formulaMeta) return;
+    
+    setIsAskingTutor(true);
+    try {
+      const response = await askTutorWithContext(meta.id, {
+        label: meta.name,
+        desc: meta.description,
+        unit: meta.units
+      });
+      
+      // Adiciona a pergunta e resposta ao painel de chat
+      const userMessage = { role: 'user' as const, content: `Explique ${meta.name} e como ela afeta a fórmula.` };
+      const assistantMessage = { role: 'assistant' as const, content: response.content };
+      
+      setMessages([...messages, userMessage, assistantMessage]);
+      
+      // Fecha o popover após perguntar
+      onClose();
+    } catch (error) {
+      console.error('Erro ao perguntar ao tutor:', error);
+    } finally {
+      setIsAskingTutor(false);
+    }
   };
 
   const hasChanged = Math.abs(value - meta.defaultValue) > 0.001;
@@ -130,15 +158,20 @@ export default function VarPopover({
         maxHeight: `${window.innerHeight - 40}px`,
         overflowY: 'auto'
       }}
+      role="dialog"
+      aria-labelledby={`var-popover-title-${meta.id}`}
+      aria-describedby={`var-popover-desc-${meta.id}`}
+      aria-modal="true"
     >
       {/* Cabeçalho */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div 
+          <div
             className="w-3 h-3 rounded-full"
             style={{ backgroundColor: meta.color || '#3b82f6' }}
+            aria-hidden="true"
           />
-          <h3 className="font-semibold text-gray-900">{meta.name}</h3>
+          <h3 id={`var-popover-title-${meta.id}`} className="font-semibold text-gray-900">{meta.name}</h3>
           <span className="text-sm font-mono bg-gray-100 px-2 py-0.5 rounded">
             {meta.label}
           </span>
@@ -153,7 +186,7 @@ export default function VarPopover({
       </div>
 
       {/* Descrição */}
-      <p className="text-sm text-gray-600 mb-3">
+      <p id={`var-popover-desc-${meta.id}`} className="text-sm text-gray-600 mb-3">
         {meta.description}
       </p>
 
@@ -211,6 +244,30 @@ export default function VarPopover({
             {isLoadingInsight ? 'Analisando variável...' : 'Insight não disponível'}
           </p>
         )}
+      </div>
+
+      {/* Botão Ask Tutor */}
+      <div className="mt-3 pt-3 border-t border-gray-200">
+        <button
+          onClick={handleAskTutor}
+          disabled={isAskingTutor}
+          className="w-full px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isAskingTutor ? (
+            <>
+              <LoadingIcon />
+              <span>Perguntando...</span>
+            </>
+          ) : (
+            <>
+              <SparkIcon />
+              <span>Perguntar ao Tutor</span>
+            </>
+          )}
+        </button>
+        <p className="text-xs text-gray-500 mt-2">
+          O tutor irá explicar esta variável e pode sugerir cenários.
+        </p>
       </div>
 
       {/* Dicas da IA */}
