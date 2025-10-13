@@ -119,6 +119,74 @@ export default function CanvasPredatorPrey() {
       .join(' ');
   }, [data, maxPhaseX, maxPhaseY]);
 
+  // Generate time axis labels
+  const timeLabels = [];
+  for (let t = 0; t <= TOTAL_TIME; t += TOTAL_TIME / 5) {
+    timeLabels.push(
+      <text
+        key={`time-${t}`}
+        x={mapTime(t)}
+        y={plotBottom + 15}
+        textAnchor="middle"
+        fontSize="10"
+        fill="#666"
+      >
+        t={t.toFixed(0)}
+      </text>
+    );
+  }
+
+  // Generate population axis labels
+  const populationLabels = [];
+  for (let p = 0; p <= maxPopulation; p += maxPopulation / 4) {
+    populationLabels.push(
+      <text
+        key={`pop-${p}`}
+        x={PAD_X - 5}
+        y={mapPopulation(p) + 3}
+        textAnchor="end"
+        fontSize="10"
+        fill="#666"
+      >
+        {p.toFixed(1)}
+      </text>
+    );
+  }
+
+  // Generate phase plane axis labels
+  const phaseXLabels = [];
+  const phaseYLabels = [];
+  
+  for (let x = 0; x <= maxPhaseX; x += maxPhaseX / 4) {
+    phaseXLabels.push(
+      <text
+        key={`phase-x-${x}`}
+        x={mapPhaseX(x)}
+        y={planeY + planeSize + 12}
+        textAnchor="middle"
+        fontSize="9"
+        fill="#666"
+      >
+        {x.toFixed(1)}
+      </text>
+    );
+  }
+  
+  for (let y = 0; y <= maxPhaseY; y += maxPhaseY / 4) {
+    phaseYLabels.push(
+      <text
+        key={`phase-y-${y}`}
+        x={planeX - 5}
+        y={mapPhaseY(y) + 3}
+        textAnchor="end"
+        fontSize="9"
+        fill="#666"
+      >
+        {y.toFixed(1)}
+      </text>
+    );
+  }
+
   return (
     <svg width={WIDTH} height={HEIGHT} className="border rounded bg-white">
       {/* time-series axes */}
@@ -139,8 +207,8 @@ export default function CanvasPredatorPrey() {
         stroke="#cbd5f5"
       />
 
-      {/* grid ticks */}
-      {[0, maxPopulation / 2, maxPopulation].map((v) => (
+      {/* grid lines for time series */}
+      {[0, maxPopulation / 4, maxPopulation / 2, maxPopulation * 3/4, maxPopulation].map((v) => (
         <line
           key={v}
           x1={PAD_X}
@@ -150,6 +218,21 @@ export default function CanvasPredatorPrey() {
           stroke="#f1f5f9"
         />
       ))}
+      
+      {Array.from({length: 6}, (_, i) => i * TOTAL_TIME / 5).map((t) => (
+        <line
+          key={t}
+          x1={mapTime(t)}
+          y1={plotTop}
+          x2={mapTime(t)}
+          y2={plotBottom}
+          stroke="#f1f5f9"
+        />
+      ))}
+
+      {/* Axis labels for time series */}
+      {timeLabels}
+      {populationLabels}
 
       <path d={preyPath} fill="none" stroke="#1d4ed8" strokeWidth={2} />
       <path d={predatorPath} fill="none" stroke="#f97316" strokeWidth={2} />
@@ -204,6 +287,33 @@ export default function CanvasPredatorPrey() {
         y2={planeY + planeSize}
         stroke="#cbd5f5"
       />
+
+      {/* Grid lines for phase plane */}
+      {Array.from({length: 5}, (_, i) => i * maxPhaseX / 4).map((x) => (
+        <line
+          key={`phase-grid-x-${x}`}
+          x1={mapPhaseX(x)}
+          y1={planeY}
+          x2={mapPhaseX(x)}
+          y2={planeY + planeSize}
+          stroke="#f1f5f9"
+        />
+      ))}
+      
+      {Array.from({length: 5}, (_, i) => i * maxPhaseY / 4).map((y) => (
+        <line
+          key={`phase-grid-y-${y}`}
+          x1={planeX}
+          y1={mapPhaseY(y)}
+          x2={planeX + planeSize}
+          y2={mapPhaseY(y)}
+          stroke="#f1f5f9"
+        />
+      ))}
+
+      {/* Axis labels for phase plane */}
+      {phaseXLabels}
+      {phaseYLabels}
 
       <path d={phasePath} fill="none" stroke="#10b981" strokeWidth={2} />
 

@@ -91,10 +91,88 @@ export default function CanvasQuadratic() {
   const mapx = (x:number)=>mapX(x,-10,10);
   const mapy = (y:number)=>mapY(y,ymin,ymax);
 
+  // Generate axis labels
+  const xLabels = [];
+  const yLabels = [];
+  
+  // X-axis labels (from -10 to 10)
+  for (let x = -10; x <= 10; x += 5) {
+    xLabels.push(
+      <text
+        key={`x-${x}`}
+        x={mapx(x)}
+        y={mapy(0) + 15}
+        textAnchor="middle"
+        fontSize="10"
+        fill="#666"
+      >
+        {x}
+      </text>
+    );
+  }
+  
+  // Y-axis labels
+  const yStep = Math.pow(10, Math.floor(Math.log10(Math.max(Math.abs(ymin), Math.abs(ymax))))) / 2;
+  const yMin = Math.floor(ymin / yStep) * yStep;
+  const yMax = Math.ceil(ymax / yStep) * yStep;
+  
+  for (let y = yMin; y <= yMax; y += yStep) {
+    if (Math.abs(y) < 0.001) continue; // Skip zero to avoid overlap with axis
+    yLabels.push(
+      <text
+        key={`y-${y}`}
+        x={mapx(0) - 10}
+        y={mapy(y) + 3}
+        textAnchor="end"
+        fontSize="10"
+        fill="#666"
+      >
+        {y.toFixed(1)}
+      </text>
+    );
+  }
+
   return (
     <svg width={WIDTH} height={HEIGHT} className="border rounded bg-white">
-      <line x1={mapx(-10)} y1={mapy(0)} x2={mapx(10)} y2={mapy(0)} stroke="#eee" />
-      <line x1={mapx(0)} y1={mapy(-999)} x2={mapx(0)} y2={mapy(999)} stroke="#eee" />
+      {/* Grid lines */}
+      {[...Array(5)].map((_, i) => {
+        const x = -10 + i * 5;
+        return (
+          <line
+            key={`grid-x-${x}`}
+            x1={mapx(x)}
+            y1={mapy(ymin)}
+            x2={mapx(x)}
+            y2={mapy(ymax)}
+            stroke="#f5f5f5"
+            strokeWidth="1"
+          />
+        );
+      })}
+      
+      {[...Array(5)].map((_, i) => {
+        const y = yMin + i * ((yMax - yMin) / 4);
+        return (
+          <line
+            key={`grid-y-${y}`}
+            x1={mapx(-10)}
+            y1={mapy(y)}
+            x2={mapx(10)}
+            y2={mapy(y)}
+            stroke="#f5f5f5"
+            strokeWidth="1"
+          />
+        );
+      })}
+      
+      {/* Axes */}
+      <line x1={mapx(-10)} y1={mapy(0)} x2={mapx(10)} y2={mapy(0)} stroke="#ccc" strokeWidth="1" />
+      <line x1={mapx(0)} y1={mapy(ymin)} x2={mapx(0)} y2={mapy(ymax)} stroke="#ccc" strokeWidth="1" />
+      
+      {/* Axis labels */}
+      {xLabels}
+      {yLabels}
+      
       {trails.map((t,i)=>(<path key={i} d={t} fill="none" stroke="#999" strokeWidth="1" />))}
       <path d={path} fill="none" stroke="#111" strokeWidth="2" />
       <circle cx={mapx(vertex[0])} cy={mapy(vertex[1])} r={4} fill="#0ea5e9" />

@@ -1,4 +1,6 @@
 import type { Vars } from '@/lib/state/store';
+import type { FormulaMeta as DetailedFormulaMeta } from '@/lib/types/variable';
+import { quadraticMeta, predatorPreyMeta } from '@/lib/meta/formula-meta';
 
 export type Preset = { id: string; title: string; vars: Vars };
 
@@ -7,6 +9,8 @@ export type FormulaMeta = {
   title: string;
   defaults: Vars;
   presets: Preset[];
+  // Referência opcional aos metadados detalhados
+  detailedMeta?: DetailedFormulaMeta;
 };
 
 export const registryMeta: FormulaMeta[] = [
@@ -19,6 +23,7 @@ export const registryMeta: FormulaMeta[] = [
       { id: 'touches', title: 'Touches axis', vars: { a: 1, b: -4, c: 4 } },
       { id: 'no-real', title: 'No real roots', vars: { a: 1, b: 0, c: 4 } },
     ],
+    detailedMeta: quadraticMeta,
   },
   {
     id: 'projectile',
@@ -99,6 +104,7 @@ export const registryMeta: FormulaMeta[] = [
       { id: 'fast-predators', title: 'Predators thrive', vars: { delta: 0.9, gamma: 0.8 } },
       { id: 'prey-boom', title: 'Prey boom', vars: { x0: 8, y0: 2, alpha: 1.5 } },
     ],
+    detailedMeta: predatorPreyMeta,
   },
   {
     id: 'logistic-map',

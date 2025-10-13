@@ -9,8 +9,9 @@ export function generateStaticParams() {
 
 export const dynamicParams = false;
 
-export default function FormulaPage({ params }: any) {
-  const formulaId = resolveFormulaId(params.id);
+export default async function FormulaPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const formulaId = resolveFormulaId(id);
   return (
     <Suspense fallback={null}>
       <FormulaClient id={formulaId} />
