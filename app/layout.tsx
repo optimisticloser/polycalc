@@ -9,6 +9,8 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const cfAnalyticsToken = process.env.NEXT_PUBLIC_CF_ANALYTICS_TOKEN;
+
   return (
     <html lang="en">
       <body className="min-h-screen bg-white text-zinc-900">
@@ -31,6 +33,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {/* Chat panel is injected on formula pages */}
           </aside>
         </div>
+        {cfAnalyticsToken ? (
+          <script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={JSON.stringify({ token: cfAnalyticsToken })}
+          ></script>
+        ) : null}
       </body>
     </html>
   );
