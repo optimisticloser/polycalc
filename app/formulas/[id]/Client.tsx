@@ -1,16 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ChatPanel from '@/components/ChatPanel';
 import { getFormula } from '@/modules/registry';
 import { useFormulaStore } from '@/lib/state/store';
 import { decodeVars, updateUrl } from '@/lib/state/url';
 
-type SearchParams = Record<string, string | string[] | undefined>;
-
 type FormulaClientProps = {
   id: string;
-  searchParams?: SearchParams;
 };
 
 function extractParam(value: string | string[] | undefined) {
@@ -19,7 +17,7 @@ function extractParam(value: string | string[] | undefined) {
   return undefined;
 }
 
-export default function FormulaClient({ id, searchParams }: FormulaClientProps) {
+export default function FormulaClient({ id }: FormulaClientProps) {
   const formula = getFormula(id);
   const setFormula = useFormulaStore(s => s.setFormula);
   const setMany = useFormulaStore(s => s.setMany);
@@ -28,8 +26,9 @@ export default function FormulaClient({ id, searchParams }: FormulaClientProps) 
   const step = useFormulaStore(s => s.step);
   const formulaId = useFormulaStore(s => s.formulaId);
 
-  const queryVars = extractParam(searchParams?.vars);
-  const queryStep = extractParam(searchParams?.step);
+  const searchParams = useSearchParams();
+  const queryVars = searchParams.get('vars') ?? undefined;
+  const queryStep = searchParams.get('step') ?? undefined;
 
   useEffect(() => {
     setFormula(formula.id, formula.defaults);

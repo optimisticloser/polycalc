@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useFormulaStore } from '@/lib/state/store';
+import type { Message } from '@/lib/state/store';
 import { askTutor } from '@/lib/ai/client';
 import { deletePreset, listPresets, savePreset } from '@/lib/presets/local';
 
@@ -19,10 +20,10 @@ export default function ChatPanel() {
   }, [showPresets, formulaId]);
 
   async function onSend() {
-    const next = [...messages, { role:'user', content: input }];
+    const next: Message[] = [...messages, { role: 'user' as const, content: input }];
     setMessages(next);
     const { content } = await askTutor(next);
-    setMessages([...next, { role:'assistant', content }]);
+    setMessages([...next, { role: 'assistant' as const, content }]);
     setInput('');
   }
 
