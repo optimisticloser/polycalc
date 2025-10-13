@@ -3,7 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 import NumberChip from '@/components/NumberChip';
 import CanvasSine from '@/components/CanvasSine';
 import ControlsSine from '@/components/ControlsSine';
+import ExplodedFormula from '@/components/ExplodedFormula';
+import ExplodedModeToggle from '@/components/ExplodedModeToggle';
+import VariableInfoPanel from '@/components/VariableInfoPanel';
 import { useFormulaStore } from '@/lib/state/store';
+import { useFormulaMeta } from '@/lib/hooks/useFormulaMeta';
 
 const BASE_FREQUENCY = 220;
 
@@ -102,38 +106,54 @@ export default function SineView() {
     }
   };
 
+  const { explodedMode } = useFormulaStore();
+  const formulaMeta = useFormulaMeta('sine');
+
   return (
     <div className="space-y-4">
-      <div className="text-lg flex flex-wrap items-center gap-2">
-        x(t) =
-        <NumberChip
-          value={vars.A ?? 1}
-          onChange={v => setVar('A', v)}
-          label="A"
-          min={0}
-          max={10}
-          step={0.1}
-        />
-        cos(
-        <NumberChip
-          value={vars.omega ?? 1}
-          onChange={v => setVar('omega', v)}
-          label="ω"
-          min={0.1}
-          max={10}
-          step={0.1}
-        />
-        · t +
-        <NumberChip
-          value={vars.phi ?? 0}
-          onChange={v => setVar('phi', v)}
-          label="φ"
-          min={-Math.PI}
-          max={Math.PI}
-          step={0.1}
-        />
-        )
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Sine Wave</h2>
+        <ExplodedModeToggle />
       </div>
+      
+      {explodedMode && formulaMeta ? (
+        <ExplodedFormula
+          meta={formulaMeta}
+          vars={vars}
+          onVarChange={setVar}
+        />
+      ) : (
+        <div className="text-lg flex flex-wrap items-center gap-2">
+          x(t) =
+          <NumberChip
+            value={vars.A ?? 1}
+            onChange={v => setVar('A', v)}
+            label="A"
+            min={0}
+            max={10}
+            step={0.1}
+          />
+          cos(
+          <NumberChip
+            value={vars.omega ?? 1}
+            onChange={v => setVar('omega', v)}
+            label="ω"
+            min={0.1}
+            max={10}
+            step={0.1}
+          />
+          · t +
+          <NumberChip
+            value={vars.phi ?? 0}
+            onChange={v => setVar('phi', v)}
+            label="φ"
+            min={-Math.PI}
+            max={Math.PI}
+            step={0.1}
+          />
+          )
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
         <button
           type="button"
@@ -146,6 +166,7 @@ export default function SineView() {
       </div>
       <CanvasSine />
       <ControlsSine />
+      <VariableInfoPanel />
     </div>
   );
 }

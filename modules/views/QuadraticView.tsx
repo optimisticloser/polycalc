@@ -5,6 +5,7 @@ import CanvasQuadratic from '@/components/CanvasQuadratic';
 import ControlsQuadratic from '@/components/ControlsQuadratic';
 import ExplodedFormula from '@/components/ExplodedFormula';
 import ExplodedModeToggle from '@/components/ExplodedModeToggle';
+import ScenarioManager from '@/components/ScenarioManager';
 import { useFormulaStore } from '@/lib/state/store';
 import FormulaLine from '@/components/FormulaLine';
 import { useFormulaMeta } from '@/lib/hooks/useFormulaMeta';
@@ -55,6 +56,7 @@ export default function QuadraticView() {
       <CanvasQuadratic />
       <ControlsQuadratic />
       <VariableInfoPanel />
+      <ScenarioManager />
     </div>
   );
 }

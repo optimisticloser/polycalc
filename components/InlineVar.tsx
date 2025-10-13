@@ -2,6 +2,7 @@
 import { useRef, useState, useCallback } from 'react';
 import clsx from 'clsx';
 import type { VariableMeta } from '@/lib/types/variable';
+import VarPopover from './VarPopover';
 
 type Props = {
   meta: VariableMeta;
@@ -26,6 +27,9 @@ export default function InlineVar({
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [showPopover, setShowPopover] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | null>(null);
+  const elementRef = useRef<HTMLSpanElement>(null);
 
   const commit = useCallback((newValue: number) => {
     const clampedValue = Math.max(meta.min, Math.min(meta.max, newValue));
@@ -115,6 +119,7 @@ export default function InlineVar({
   return (
     <span className="relative inline-block">
       <span
+        ref={elementRef}
         className={clsx(
           'inline-flex items-center px-2 py-0.5 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer select-none',
           meta.editable ? 'hover:bg-opacity-80 hover:scale-105' : 'cursor-default',
@@ -131,13 +136,24 @@ export default function InlineVar({
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        onPointerEnter={() => {
+        onPointerEnter={(e) => {
           setIsHovered(true);
           onPointerEnter?.();
+          
+          // Calcular posição para o popover
+          if (elementRef.current && showTooltip) {
+            const rect = elementRef.current.getBoundingClientRect();
+            setPopoverPosition({
+              x: rect.left,
+              y: rect.bottom + 5
+            });
+            setShowPopover(true);
+          }
         }}
         onPointerLeave={() => {
           setIsHovered(false);
           onPointerLeave?.();
+          setShowPopover(false);
         }}
         onDoubleClick={onDoubleClick}
         onKeyDown={handleKeyDown}
@@ -167,29 +183,28 @@ export default function InlineVar({
         )}
       </span>
       
-      {showTooltip && isHovered && !isDragging && (
-        <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl max-w-xs">
+      {/* Tooltip simplificado - só mostra se não tiver popover */}
+      {showTooltip && isHovered && !isDragging && !showPopover && (
+        <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-xl max-w-xs">
           <div className="font-semibold text-white mb-1">
             {meta.name} ({meta.label})
           </div>
-          <div className="text-gray-300 text-xs mb-2">
+          <div className="text-gray-300 text-xs">
             {meta.description}
           </div>
-          {meta.contextualInfo && (
-            <div className="text-gray-400 text-xs italic">
-              {meta.contextualInfo}
-            </div>
-          )}
-          {meta.editable && (
-            <div className="text-gray-400 text-xs mt-2 pt-2 border-t border-gray-700">
-              <div>Dica: Arraste para ajustar, clique duas vezes para editar</div>
-              <div>Shift+arraste: 10x | Alt+arraste: 0.1x</div>
-              <div>Setas: ajuste fino | Enter/Space: editar</div>
-            </div>
-          )}
           <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
         </div>
       )}
+      
+      {/* Popover avançado com integração AI */}
+      <VarPopover
+        meta={meta}
+        value={value}
+        onChange={onChange}
+        isVisible={showPopover}
+        position={popoverPosition}
+        onClose={() => setShowPopover(false)}
+      />
     </span>
   );
 }

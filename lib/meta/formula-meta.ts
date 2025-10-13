@@ -253,10 +253,181 @@ export const predatorPreyMeta: FormulaMeta = {
   ]
 };
 
+export const sineMeta: FormulaMeta = {
+  id: 'sine',
+  title: 'Sine Wave',
+  description: 'A sinusoidal wave function representing periodic oscillation',
+  
+  // Fórmula LaTeX com placeholders para variáveis
+  template: 'x(t) = {{A}} cos({{omega}} · t + {{phi}})',
+  
+  // Metadados das variáveis
+  variables: {
+    A: {
+      id: 'A',
+      symbol: 'A',
+      label: 'A',
+      name: 'Amplitude',
+      description: 'Maximum displacement from equilibrium',
+      contextualInfo: 'Controls the height of the wave peaks and troughs',
+      min: 0,
+      max: 10,
+      step: 0.1,
+      defaultValue: 1,
+      decimals: 2,
+      editable: true,
+      color: '#3b82f6',
+      aiContext: 'The amplitude determines the maximum value the wave can reach',
+      aiHints: [
+        'Higher values create taller waves',
+        'When A = 0, the wave becomes a flat line',
+        'Amplitude affects the volume in sound waves'
+      ]
+    },
+    omega: {
+      id: 'omega',
+      symbol: '\\omega',
+      label: 'ω',
+      name: 'Angular Frequency',
+      description: 'Rate of change of the phase of the sine wave',
+      contextualInfo: 'Determines how many oscillations occur per unit time',
+      min: 0.1,
+      max: 10,
+      step: 0.1,
+      defaultValue: 1,
+      decimals: 2,
+      editable: true,
+      color: '#ef4444',
+      aiContext: 'Angular frequency controls how quickly the wave oscillates',
+      aiHints: [
+        'Higher values create more oscillations in the same time period',
+        'Related to frequency by: f = ω / (2π)',
+        'Affects the pitch in sound waves'
+      ]
+    },
+    phi: {
+      id: 'phi',
+      symbol: '\\phi',
+      label: 'φ',
+      name: 'Phase Shift',
+      description: 'Horizontal shift of the wave',
+      contextualInfo: 'Determines where the wave starts in its cycle',
+      min: -Math.PI,
+      max: Math.PI,
+      step: 0.1,
+      defaultValue: 0,
+      decimals: 2,
+      editable: true,
+      color: '#10b981',
+      aiContext: 'Phase shift moves the wave horizontally without changing its shape',
+      aiHints: [
+        'Positive values shift the wave to the left',
+        'Negative values shift the wave to the right',
+        'Phase is important in wave interference patterns'
+      ]
+    }
+  },
+  
+  aiContext: 'Sine waves are fundamental in physics, describing oscillations, waves, and periodic phenomena',
+  aiScenarios: [
+    {
+      name: 'Standard Wave',
+      description: 'Basic sine wave with unit amplitude',
+      values: { A: 1, omega: 1, phi: 0 }
+    },
+    {
+      name: 'High Frequency',
+      description: 'Rapid oscillations',
+      values: { A: 1, omega: 5, phi: 0 }
+    },
+    {
+      name: 'Large Amplitude',
+      description: 'Tall wave peaks',
+      values: { A: 5, omega: 1, phi: 0 }
+    }
+  ]
+};
+
+export const eulerMeta: FormulaMeta = {
+  id: 'euler',
+  title: 'Euler\'s Formula',
+  description: 'The relationship between exponential and trigonometric functions',
+  
+  // Fórmula LaTeX com placeholders para variáveis
+  template: 're^{{i}{theta}}',
+  
+  // Metadados das variáveis
+  variables: {
+    r: {
+      id: 'r',
+      symbol: 'r',
+      label: 'r',
+      name: 'Magnitude',
+      description: 'Distance from origin in complex plane',
+      contextualInfo: 'Controls the radius of the complex number',
+      min: 0,
+      max: 2,
+      step: 0.05,
+      defaultValue: 1,
+      decimals: 2,
+      editable: true,
+      color: '#3b82f6',
+      aiContext: 'The magnitude represents the distance from the origin in the complex plane',
+      aiHints: [
+        'Larger values create longer vectors',
+        'When r = 0, the complex number is at the origin',
+        'Affects the size of the real and imaginary parts'
+      ]
+    },
+    theta: {
+      id: 'theta',
+      symbol: '\\theta',
+      label: 'θ',
+      name: 'Angle',
+      description: 'Angle from positive real axis',
+      contextualInfo: 'Determines the direction of the complex number',
+      min: -Math.PI,
+      max: Math.PI,
+      step: 0.1,
+      defaultValue: 0,
+      decimals: 2,
+      editable: true,
+      color: '#f59e0b',
+      aiContext: 'The angle determines the direction of the complex number in the plane',
+      aiHints: [
+        'Positive angles rotate counter-clockwise',
+        'θ = π/2 gives a purely imaginary number',
+        'θ = π gives a negative real number'
+      ]
+    }
+  },
+  
+  aiContext: 'Euler\'s formula connects exponential functions with trigonometry, forming the foundation of complex analysis',
+  aiScenarios: [
+    {
+      name: 'Unit Circle',
+      description: 'Points on the unit circle',
+      values: { r: 1, theta: 0 }
+    },
+    {
+      name: 'Pure Imaginary',
+      description: 'Point on imaginary axis',
+      values: { r: 1, theta: Math.PI/2 }
+    },
+    {
+      name: 'Large Magnitude',
+      description: 'Far from origin',
+      values: { r: 1.5, theta: Math.PI/4 }
+    }
+  ]
+};
+
 // Registro de metadados de fórmulas
 export const formulaMetaRegistry: Record<string, FormulaMeta> = {
   quadratic: quadraticMeta,
   'predator-prey': predatorPreyMeta,
+  sine: sineMeta,
+  euler: eulerMeta,
 };
 
 // Função para obter metadados de uma fórmula
