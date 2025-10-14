@@ -12,21 +12,25 @@ type Props = {
   position: { x: number; y: number } | null;
   onClose: () => void;
   onAskTutor?: (message: string) => void;
+  onHover?: (isHovering: boolean) => void;
 };
 
-export default function VarPopover({ 
-  meta, 
-  value, 
-  onChange, 
-  isVisible, 
+export default function VarPopover({
+  meta,
+  value,
+  onChange,
+  isVisible,
   position,
-  onClose 
+  onClose,
+  onHover
 }: Props) {
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [isLoadingInsight, setIsLoadingInsight] = useState(false);
   const [isAskingTutor, setIsAskingTutor] = useState(false);
+  const [isHoveringPopover, setIsHoveringPopover] = useState(false);
   const { vars, formulaMeta, setMessages, messages } = useFormulaStore();
   const hasAskedInsight = useRef(false);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Carrega insight da IA quando o popover fica visível
   useEffect(() => {
@@ -35,6 +39,25 @@ export default function VarPopover({
       loadAIInsight();
     }
   }, [isVisible]);
+
+  // Gerencia o atraso para esconder o popover
+  useEffect(() => {
+    if (isVisible || isHoveringPopover) {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+        hideTimeoutRef.current = null;
+      }
+    }
+  }, [isVisible, isHoveringPopover]);
+
+  // Limpa o timeout ao desmontar
+  useEffect(() => {
+    return () => {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const loadAIInsight = async () => {
     if (!meta.aiContext || !formulaMeta) return;
@@ -126,12 +149,13 @@ export default function VarPopover({
   if (!isVisible || !position) return null;
 
   // Calcula a posição do popover para evitar que saia da tela
-  const popoverWidth = 320;
-  const popoverHeight = 280;
+  const popoverWidth = 480;
+  const popoverHeight = 200;
   const margin = 10;
 
+  // Posiciona o popover logo abaixo do token
   let left = position.x;
-  let top = position.y;
+  let top = position.y + 5; // Pequeno espaço entre o token e o popover
 
   // Ajusta horizontalmente se necessário
   if (left + popoverWidth > window.innerWidth - margin) {
@@ -143,7 +167,7 @@ export default function VarPopover({
 
   // Ajusta verticalmente se necessário
   if (top + popoverHeight > window.innerHeight - margin) {
-    top = position.y - popoverHeight - 10; // Posiciona acima do elemento
+    top = position.y - popoverHeight - 5; // Posiciona acima do elemento
   }
   if (top < margin) {
     top = margin;
@@ -151,10 +175,11 @@ export default function VarPopover({
 
   return (
     <div
-      className="fixed z-50 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4"
+      className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4"
       style={{
         left: `${left}px`,
         top: `${top}px`,
+        width: `${popoverWidth}px`,
         maxHeight: `${window.innerHeight - 40}px`,
         overflowY: 'auto'
       }}
@@ -162,136 +187,155 @@ export default function VarPopover({
       aria-labelledby={`var-popover-title-${meta.id}`}
       aria-describedby={`var-popover-desc-${meta.id}`}
       aria-modal="true"
+      onMouseEnter={() => {
+        setIsHoveringPopover(true);
+        onHover?.(true);
+      }}
+      onMouseLeave={() => {
+        setIsHoveringPopover(false);
+        onHover?.(false);
+        // Adiciona um pequeno atraso antes de esconder o popover
+        hideTimeoutRef.current = setTimeout(() => {
+          if (!isVisible) {
+            onClose();
+          }
+        }, 300);
+      }}
     >
-      {/* Cabeçalho */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: meta.color || '#3b82f6' }}
-            aria-hidden="true"
-          />
-          <h3 id={`var-popover-title-${meta.id}`} className="font-semibold text-gray-900">{meta.name}</h3>
-          <span className="text-sm font-mono bg-gray-100 px-2 py-0.5 rounded">
-            {meta.label}
-          </span>
-        </div>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 transition-colors"
-          aria-label="Fechar"
-        >
-          ×
-        </button>
-      </div>
+      <div className="flex gap-4">
+        {/* Coluna esquerda - Informações principais */}
+        <div className="flex-1">
+          {/* Cabeçalho */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: meta.color || '#3b82f6' }}
+                aria-hidden="true"
+              />
+              <h3 id={`var-popover-title-${meta.id}`} className="font-semibold text-gray-900">{meta.name}</h3>
+              <span className="text-sm font-mono bg-gray-100 px-2 py-0.5 rounded">
+                {meta.label}
+              </span>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Fechar"
+            >
+              ×
+            </button>
+          </div>
 
-      {/* Descrição */}
-      <p id={`var-popover-desc-${meta.id}`} className="text-sm text-gray-600 mb-3">
-        {meta.description}
-      </p>
+          {/* Descrição */}
+          <p id={`var-popover-desc-${meta.id}`} className="text-sm text-gray-600 mb-2">
+            {meta.description}
+          </p>
 
-      {/* Informações contextuais */}
-      {meta.contextualInfo && (
-        <div className="mb-3 p-2 bg-blue-50 rounded text-sm text-blue-800">
-          <span className="font-medium">Contexto:</span> {meta.contextualInfo}
-        </div>
-      )}
+          {/* Informações contextuais */}
+          {meta.contextualInfo && (
+            <div className="mb-2 p-2 bg-blue-50 rounded text-sm text-blue-800">
+              <span className="font-medium">Contexto:</span> {meta.contextualInfo}
+            </div>
+          )}
 
-      {/* Valor atual e controles */}
-      <div className="bg-gray-50 rounded p-3 mb-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">Valor atual:</span>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-lg">
-              {value.toFixed(meta.decimals ?? 2)}
-              {meta.units && <span className="text-sm ml-1">{meta.units}</span>}
-            </span>
-            {hasChanged && (
-              <button
-                onClick={handleReset}
-                className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
-                title="Redefinir para valor padrão"
-              >
-                <ResetIcon />
-              </button>
-            )}
+          {/* Valor atual e controles */}
+          <div className="bg-gray-50 rounded p-2 mb-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">Valor:</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-lg">
+                  {value.toFixed(meta.decimals ?? 2)}
+                  {meta.units && <span className="text-sm ml-1">{meta.units}</span>}
+                </span>
+                {hasChanged && (
+                  <button
+                    onClick={handleReset}
+                    className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
+                    title="Redefinir para valor padrão"
+                  >
+                    <ResetIcon />
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            <div className="text-xs text-gray-500 flex gap-3">
+              <span>Padrão: {meta.defaultValue.toFixed(meta.decimals ?? 2)}</span>
+              <span>Intervalo: [{meta.min}, {meta.max}]</span>
+              <span>Passo: {meta.step}</span>
+            </div>
+          </div>
+
+          {/* Instruções de interação */}
+          <div className="text-xs text-gray-500">
+            <span>• Arraste para ajustar</span>
+            <span className="ml-2">• Shift/Alt: ajuste rápido/fino</span>
+            <span className="ml-2">• Duplo clique: editar</span>
           </div>
         </div>
-        
-        <div className="text-xs text-gray-500 space-y-1">
-          <div>Padrão: {meta.defaultValue.toFixed(meta.decimals ?? 2)}</div>
-          <div>Intervalo: [{meta.min}, {meta.max}]</div>
-          <div>Passo: {meta.step}</div>
-        </div>
-      </div>
 
-      {/* Insight da IA */}
-      <div className="border-t border-gray-200 pt-3">
-        <div className="flex items-center gap-2 mb-2">
-          <SparkIcon />
-          <span className="text-sm font-medium text-gray-700">Análise da IA</span>
-          {isLoadingInsight && (
-            <LoadingIcon />
-          )}
-        </div>
-        
-        {aiInsight ? (
-          <p className="text-sm text-gray-600 leading-relaxed">
-            {aiInsight}
-          </p>
-        ) : (
-          <p className="text-sm text-gray-400 italic">
-            {isLoadingInsight ? 'Analisando variável...' : 'Insight não disponível'}
-          </p>
-        )}
-      </div>
-
-      {/* Botão Ask Tutor */}
-      <div className="mt-3 pt-3 border-t border-gray-200">
-        <button
-          onClick={handleAskTutor}
-          disabled={isAskingTutor}
-          className="w-full px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isAskingTutor ? (
-            <>
-              <LoadingIcon />
-              <span>Perguntando...</span>
-            </>
-          ) : (
-            <>
+        {/* Coluna direita - IA e interações */}
+        <div className="w-64 border-l border-gray-200 pl-4">
+          {/* Insight da IA */}
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-2">
               <SparkIcon />
-              <span>Perguntar ao Tutor</span>
-            </>
+              <span className="text-sm font-medium text-gray-700">Análise da IA</span>
+              {isLoadingInsight && (
+                <LoadingIcon />
+              )}
+            </div>
+            
+            {aiInsight ? (
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {aiInsight}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400 italic">
+                {isLoadingInsight ? 'Analisando...' : 'Insight não disponível'}
+              </p>
+            )}
+          </div>
+
+          {/* Botão Ask Tutor */}
+          <div className="mb-3">
+            <button
+              onClick={handleAskTutor}
+              disabled={isAskingTutor}
+              className="w-full px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isAskingTutor ? (
+                <>
+                  <LoadingIcon />
+                  <span>Perguntando...</span>
+                </>
+              ) : (
+                <>
+                  <SparkIcon />
+                  <span>Perguntar ao Tutor</span>
+                </>
+              )}
+            </button>
+            <p className="text-xs text-gray-500 mt-1">
+              O tutor irá explicar esta variável e pode sugerir cenários.
+            </p>
+          </div>
+
+          {/* Dicas da IA */}
+          {meta.aiHints && meta.aiHints.length > 0 && (
+            <div>
+              <div className="text-sm font-medium text-gray-700 mb-1">Dicas:</div>
+              <ul className="text-xs text-gray-600 space-y-1">
+                {meta.aiHints.map((hint, index) => (
+                  <li key={index} className="flex items-start gap-1">
+                    <span className="text-blue-500 mt-0.5">•</span>
+                    <span>{hint}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
-        </button>
-        <p className="text-xs text-gray-500 mt-2">
-          O tutor irá explicar esta variável e pode sugerir cenários.
-        </p>
-      </div>
-
-      {/* Dicas da IA */}
-      {meta.aiHints && meta.aiHints.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
-          <div className="text-sm font-medium text-gray-700 mb-2">Dicas:</div>
-          <ul className="text-xs text-gray-600 space-y-1">
-            {meta.aiHints.map((hint, index) => (
-              <li key={index} className="flex items-start gap-1">
-                <span className="text-blue-500 mt-0.5">•</span>
-                <span>{hint}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Instruções de interação */}
-      <div className="mt-3 pt-3 border-t border-gray-200">
-        <div className="text-xs text-gray-500 space-y-1">
-          <div>• Arraste para ajustar o valor</div>
-          <div>• Shift+arraste: ajuste rápido (10x)</div>
-          <div>• Alt+arraste: ajuste fino (0.1x)</div>
-          <div>• Duplo clique: editar valor</div>
         </div>
       </div>
     </div>

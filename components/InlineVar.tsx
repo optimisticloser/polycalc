@@ -29,7 +29,9 @@ export default function InlineVar({
   const [showInfo, setShowInfo] = useState(false);
   const [showPopover, setShowPopover] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | null>(null);
+  const [delayedHide, setDelayedHide] = useState(false);
   const elementRef = useRef<HTMLSpanElement>(null);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const commit = useCallback((newValue: number) => {
     const clampedValue = Math.max(meta.min, Math.min(meta.max, newValue));
@@ -147,12 +149,19 @@ export default function InlineVar({
           setIsHovered(true);
           onPointerEnter?.();
           
+          // Cancela qualquer timeout de esconder
+          if (hideTimeoutRef.current) {
+            clearTimeout(hideTimeoutRef.current);
+            hideTimeoutRef.current = null;
+          }
+          setDelayedHide(false);
+          
           // Calcular posição para o popover
           if (elementRef.current && showTooltip) {
             const rect = elementRef.current.getBoundingClientRect();
             setPopoverPosition({
               x: rect.left,
-              y: rect.bottom + 5
+              y: rect.bottom + 2 // Reduzido para minimizar o espaço
             });
             setShowPopover(true);
           }
@@ -160,7 +169,14 @@ export default function InlineVar({
         onPointerLeave={() => {
           setIsHovered(false);
           onPointerLeave?.();
-          setShowPopover(false);
+          
+          // Adiciona um pequeno atraso antes de esconder o popover
+          hideTimeoutRef.current = setTimeout(() => {
+            setDelayedHide(true);
+            setTimeout(() => {
+              setShowPopover(false);
+            }, 100);
+          }, 200);
         }}
         onDoubleClick={onDoubleClick}
         onKeyDown={handleKeyDown}
@@ -204,6 +220,16 @@ export default function InlineVar({
         isVisible={showPopover}
         position={popoverPosition}
         onClose={() => setShowPopover(false)}
+        onHover={(isHovering) => {
+          if (isHovering) {
+            // Cancela qualquer timeout de esconder
+            if (hideTimeoutRef.current) {
+              clearTimeout(hideTimeoutRef.current);
+              hideTimeoutRef.current = null;
+            }
+            setDelayedHide(false);
+          }
+        }}
       />
     </span>
   );
