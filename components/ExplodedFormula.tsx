@@ -22,10 +22,19 @@ export default function ExplodedFormula({
   // Usa as variáveis passadas como props ou do store
   const currentVars = vars || storeVars;
   
+  // Garante que o callback de mudança sempre use o setVar do store
+  const handleVarChange = (varId: string, value: number) => {
+    if (onVarChange) {
+      onVarChange(varId, value);
+    } else {
+      setVar(varId, value);
+    }
+  };
+  
   // Renderiza a fórmula em modo explodido
   const renderExplodedFormula = useMemo(() => {
-    return renderExplodedView(meta, currentVars, onVarChange || setVar, setHoveredVar);
-  }, [meta, currentVars, onVarChange, setVar, setHoveredVar]);
+    return renderExplodedView(meta, currentVars, handleVarChange, setHoveredVar);
+  }, [meta, currentVars, handleVarChange, setHoveredVar]);
   
   return (
     <div className={`exploded-formula-container ${className || ''}`}>
