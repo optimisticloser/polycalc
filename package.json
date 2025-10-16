@@ -1,6 +1,7 @@
 {
   "name": "polycalc",
   "version": "0.2.0",
+  "description": "Interactive, explorable math — exploded formulas, scenarios, and AI tutor.",
   "private": true,
   "packageManager": "pnpm@10.5.2",
   "scripts": {
