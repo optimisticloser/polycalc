@@ -2,16 +2,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useFormulaStore } from '@/lib/state/store';
 
-const WIDTH = 700;
-const HEIGHT = 360;
+const DEFAULT_WIDTH = 700;
+const DEFAULT_HEIGHT = 360;
 const PAD = 30;
 
-function mapX(x: number, xmin: number, xmax: number) {
-  return PAD + (x - xmin) / (xmax - xmin) * (WIDTH - 2*PAD);
+function mapX(x: number, xmin: number, xmax: number, width: number) {
+  return PAD + (x - xmin) / (xmax - xmin) * (width - 2*PAD);
 }
-function mapY(y: number, ymin: number, ymax: number) {
+function mapY(y: number, ymin: number, ymax: number, height: number) {
   const t = (y - ymin) / (ymax - ymin);
-  return HEIGHT - PAD - t * (HEIGHT - 2*PAD);
+  return height - PAD - t * (height - 2*PAD);
 }
 
 type QuadraticData = {
@@ -22,7 +22,7 @@ type QuadraticData = {
   vertex: [number, number];
 };
 
-function computeQuadraticData(a: number, b: number, c: number): QuadraticData {
+function computeQuadraticData(a: number, b: number, c: number, width: number, height: number): QuadraticData {
   const xmin = -10, xmax = 10;
   const step = 0.05;
   const pts: [number, number][] = [];
@@ -34,7 +34,7 @@ function computeQuadraticData(a: number, b: number, c: number): QuadraticData {
     pts.push([x, y]);
   }
   if (ymax === ymin) { ymax = ymin + 1; }
-  const d = pts.map((p,i) => `${i===0?'M':'L'} ${mapX(p[0],-10,10)} ${mapY(p[1],ymin,ymax)}`).join(' ');
+  const d = pts.map((p,i) => `${i===0?'M':'L'} ${mapX(p[0],-10,10,width)} ${mapY(p[1],ymin,ymax,height)}`).join(' ');
   const D = b*b - 4*a*c;
   const rootVals: number[] = [];
   if (a !== 0 && D >= 0) {
@@ -48,7 +48,12 @@ function computeQuadraticData(a: number, b: number, c: number): QuadraticData {
   return { path: d, points: pts, roots: rootVals, discr: D, vertex };
 }
 
-export default function CanvasQuadratic() {
+interface CanvasQuadraticProps {
+  width?: number;
+  height?: number;
+}
+
+export default function CanvasQuadratic({ width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT }: CanvasQuadraticProps) {
   const { vars } = useFormulaStore();
   const a = vars.a ?? 1;
   const b = vars.b ?? 0;
@@ -56,20 +61,20 @@ export default function CanvasQuadratic() {
   const [trails, setTrails] = useState<string[]>([]);
   const lastPath = useRef<string>('');
   const frameRef = useRef<number | null>(null);
-  const latestVars = useRef({ a, b, c });
-  const [{ path, points, roots, discr, vertex }, setData] = useState<QuadraticData>(() => computeQuadraticData(a, b, c));
+  const latestVars = useRef({ a, b, c, width, height });
+  const [{ path, points, roots, discr, vertex }, setData] = useState<QuadraticData>(() => computeQuadraticData(a, b, c, width, height));
 
   useEffect(() => {
-    latestVars.current = { a, b, c };
+    latestVars.current = { a, b, c, width, height };
     if (frameRef.current !== null) {
       return;
     }
     frameRef.current = requestAnimationFrame(() => {
       frameRef.current = null;
-      const next = computeQuadraticData(latestVars.current.a, latestVars.current.b, latestVars.current.c);
+      const next = computeQuadraticData(latestVars.current.a, latestVars.current.b, latestVars.current.c, latestVars.current.width, latestVars.current.height);
       setData(prev => (prev.path === next.path ? prev : next));
     });
-  }, [a, b, c]);
+  }, [a, b, c, width, height]);
 
   useEffect(() => () => {
     if (frameRef.current !== null) {
@@ -88,8 +93,8 @@ export default function CanvasQuadratic() {
   for (const [,y] of points) { ymin = Math.min(ymin,y); ymax = Math.max(ymax,y); }
   if (ymax === ymin) { ymax = ymin + 1; }
 
-  const mapx = (x:number)=>mapX(x,-10,10);
-  const mapy = (y:number)=>mapY(y,ymin,ymax);
+  const mapx = (x:number)=>mapX(x,-10,10,width);
+  const mapy = (y:number)=>mapY(y,ymin,ymax,height);
 
   // Generate axis labels
   const xLabels = [];
@@ -133,7 +138,7 @@ export default function CanvasQuadratic() {
   }
 
   return (
-    <svg width={WIDTH} height={HEIGHT} className="border rounded bg-white">
+    <svg width={width} height={height} className="border rounded bg-white">
       {/* Grid lines */}
       {[...Array(5)].map((_, i) => {
         const x = -10 + i * 5;
@@ -177,7 +182,7 @@ export default function CanvasQuadratic() {
       <path d={path} fill="none" stroke="#111" strokeWidth="2" />
       <circle cx={mapx(vertex[0])} cy={mapy(vertex[1])} r={4} fill="#0ea5e9" />
       {roots.map((r,i)=>(<circle key={i} cx={mapx(r)} cy={mapy(0)} r={4} fill="#ef4444"/>))}
-      <text x={WIDTH-10} y={20} textAnchor="end" fontSize="12" fill="#555">
+      <text x={width-10} y={20} textAnchor="end" fontSize="12" fill="#555">
         D = {discr.toFixed(2)} {discr<0? ' (no real roots)': discr===0? ' (touches)': ' (two roots)'}
       </text>
     </svg>

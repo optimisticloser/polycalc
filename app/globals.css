@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+.var-underline {
+  border-bottom: 2px dotted currentColor;
+}
+
+.exploded-token:hover {
+  background: rgba(255, 228, 230, 0.5);
+}
+
+.token-editable {
+  color: #f43f5e; /* text-rose-600 */
+}
+
 :root {
   --ring: 0 0% 0%;
 }

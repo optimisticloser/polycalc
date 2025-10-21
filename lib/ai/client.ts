@@ -16,6 +16,12 @@ function applyToolCalls(calls: any[]) {
         store.setVar(args.name, args.value);
         store.pushAction(`set ${args.name} → ${args.value}`);
       }
+    } else if (name === 'setMany') {
+      if (typeof args.patch === 'object' && args.patch !== null) {
+        store.setMany(args.patch);
+        const changes = Object.entries(args.patch).map(([k, v]) => `${k}=${v}`).join(', ');
+        store.pushAction(`scenario: ${changes}`);
+      }
     } else if (name === 'showStep') {
       if (typeof args.index === 'number') {
         store.setStep(args.index);
@@ -76,4 +82,33 @@ export async function askTutor(messages: ChatMessage[]) {
     console.error('Failed to reach tutor endpoint', error);
     return { content: fallbackContent };
   }
+}
+
+export async function askTutorWithContext(
+  variableId: string,
+  meta: { label: string; desc: string; unit?: string },
+  userQuestion?: string
+) {
+  const { formulaId, vars, formulaMeta } = useFormulaStore.getState();
+  const system = {
+    role: 'system' as const,
+    content: 'You are a patient math tutor. Use short paragraphs. When useful, propose tool calls (setVariable or setMany) to illustrate effects.'
+  };
+  
+  const context = {
+    role: 'assistant' as const,
+    content: `Current formula: ${formulaMeta?.title || formulaId}
+Variable: ${meta.label} (${variableId})
+Description: ${meta.desc}
+Unit: ${meta.unit || 'none'}
+Current value: ${vars[variableId]}
+All current values: ${JSON.stringify(vars)}`
+  };
+  
+  const user = {
+    role: 'user' as const,
+    content: userQuestion || `Explain ${meta.label} and how changing it affects the visualization.`
+  };
+  
+  return askTutor([system, context, user]);
 }

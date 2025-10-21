@@ -1,113 +1,155 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useFormulaStore } from '@/lib/state/store';
-import type { Message } from '@/lib/state/store';
-import { askTutor } from '@/lib/ai/client';
-import { deletePreset, listPresets, savePreset } from '@/lib/presets/local';
 
-type LocalPreset = ReturnType<typeof listPresets>[number];
+import { useChat } from '@ai-sdk/react';
+import { useState, useRef, useEffect } from 'react';
+import { useFormulaStore } from '@/lib/state/store';
+import { useFormulaMeta } from '@/lib/hooks/useFormulaMeta';
+import { lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
+import MarkdownRenderer from './MarkdownRenderer';
 
 export default function ChatPanel() {
-  const { messages, setMessages, actions, formulaId, vars, setMany } = useFormulaStore();
-  const [input, setInput] = useState('What happens if I double a?');
-  const [showPresets, setShowPresets] = useState(false);
-  const [presets, setPresets] = useState<LocalPreset[]>([]);
+  const { formulaId, vars, setVar, setMany, pushAction } = useFormulaStore();
+  const formulaMetaResult = useFormulaMeta(formulaId);
+  const formulaMeta = formulaMetaResult?.meta || null;
+  
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const { messages, sendMessage, isLoading, addToolResult } = useChat({
+    api: '/api/chat',
+    body: { formulaId },
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+    onToolCall: async ({ toolCall }) => {
+      console.log('Tool call recebido:', toolCall);
+      
+      if (toolCall.toolName === 'setVariable') {
+        const args = toolCall.input as { name: string; value: number };
+        setVar(args.name, args.value);
+        pushAction(`Alterou ${args.name} para ${args.value}`);
+        
+        addToolResult({
+          tool: 'setVariable',
+          toolCallId: toolCall.toolCallId,
+          output: `Variável ${args.name} alterada para ${args.value}`
+        });
+      }
+      
+      if (toolCall.toolName === 'setMany') {
+        const args = toolCall.input as { patch: Record<string, number> };
+        setMany(args.patch);
+        const changes = Object.entries(args.patch).map(([k, v]) => `${k}=${v}`).join(', ');
+        pushAction(`Aplicou cenário: ${changes}`);
+        
+        addToolResult({
+          tool: 'setMany',
+          toolCallId: toolCall.toolCallId,
+          output: `Cenário aplicado: ${changes}`
+        });
+      }
+    },
+    onError: (error) => {
+      console.error('Erro no chat:', error);
+    },
+  });
 
+  // Scroll automático para baixo quando há novas mensagens ou quando está carregando
   useEffect(() => {
-    if (showPresets) {
-      setPresets(listPresets(formulaId));
-    }
-  }, [showPresets, formulaId]);
-
-  async function onSend() {
-    const next: Message[] = [...messages, { role: 'user' as const, content: input }];
-    setMessages(next);
-    const { content } = await askTutor(next);
-    setMessages([...next, { role: 'assistant' as const, content }]);
-    setInput('');
-  }
-
-  function onSavePreset() {
-    savePreset(formulaId, vars);
-    setShowPresets(true);
-    setPresets(listPresets(formulaId));
-  }
-
-  function togglePresets() {
-    setShowPresets((prev) => !prev);
-    if (!showPresets) {
-      setPresets(listPresets(formulaId));
-    }
-  }
-
-  function onApplyPreset(preset: LocalPreset) {
-    setMany(preset.vars);
-    setShowPresets(false);
-  }
-
-  function onDeletePreset(id: string) {
-    deletePreset(formulaId, id);
-    setPresets(listPresets(formulaId));
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
 
   return (
-    <div className="border-l border-zinc-200 flex flex-col h-full">
-      <div className="p-3 flex items-center justify-between gap-3">
-        <div className="font-semibold">AI Tutor</div>
-        <div className="flex items-center gap-2 text-xs">
-          <button className="px-2 py-1 border rounded" onClick={onSavePreset}>
-            Save preset
-          </button>
-          <button className="px-2 py-1 border rounded" onClick={togglePresets}>
-            {showPresets ? 'Hide' : 'View'}
-          </button>
-        </div>
+    <div className="flex flex-col h-full border-l border-zinc-200">
+      {/* Header com gradiente verde-laranja */}
+      <div className="bg-gradient-to-r from-green-500 to-orange-500 text-white p-4">
+        <h3 className="font-semibold text-lg">Tutor de Matemática</h3>
+        <p className="text-sm opacity-90 mt-1">
+          {formulaMeta?.title || 'Fórmula Atual'}
+        </p>
       </div>
-      {showPresets && (
-        <div className="px-3 pb-3 text-xs space-y-2">
-          {presets.length === 0 ? (
-            <div className="text-zinc-500">No presets saved yet.</div>
-          ) : (
-            <ul className="space-y-2">
-              {presets.map((preset) => (
-                <li key={preset.id} className="border rounded p-2">
-                  <div className="font-medium mb-1">{preset.title}</div>
-                  <div className="flex gap-2">
-                    <button
-                      className="px-2 py-1 border rounded"
-                      onClick={() => onApplyPreset(preset)}
-                    >
-                      Apply
-                    </button>
-                    <button
-                      className="px-2 py-1 border rounded text-red-600"
-                      onClick={() => onDeletePreset(preset.id)}
-                    >
-                      Delete
-                    </button>
+
+      {/* Área de mensagens */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.length === 0 && (
+          <div className="text-center text-zinc-500 text-sm">
+            <p>Olá! Sou seu tutor de matemática.</p>
+            <p className="mt-2">Posso explicar como cada variável afeta a visualização e alterar valores em tempo real.</p>
+            <p className="mt-2">O que gostaria de saber sobre esta fórmula?</p>
+          </div>
+        )}
+        
+        {messages.map((message) => (
+          <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`px-4 py-2 rounded-lg ${
+              message.role === 'user' 
+                ? 'bg-blue-500 text-white max-w-[60%]' 
+                : 'bg-gray-100 text-gray-800 w-full max-w-none'
+            }`}>
+              <div>
+                {message.parts.map((part, i) => 
+                  part.type === 'text' ? (
+                    <MarkdownRenderer 
+                      key={i} 
+                      content={part.text} 
+                      className="text-sm"
+                      textColor={message.role === 'user' ? 'text-white' : 'text-gray-700'}
+                    />
+                  ) : null
+                )}
+              </div>
+              
+              {/* Renderizar tool calls se existirem */}
+              {message.parts.filter(part => part.type === 'tool-call').map((part: any, i: number) => (
+                <div key={i} className="text-xs mt-2 p-2 bg-white/50 rounded border border-gray-300">
+                  <div className="flex items-center gap-1">
+                    <span>🔧</span>
+                    <span>Executando: {part.toolName}</span>
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
-          )}
-        </div>
-      )}
-      <div className="px-3 pb-2 text-xs text-zinc-500">Recent actions</div>
-      <ul className="px-3 text-xs space-y-1 max-h-28 overflow-auto">
-        {actions.map((a,i)=>(<li key={i}>• {a}</li>))}
-      </ul>
-      <div className="flex-1 overflow-auto p-3 space-y-3">
-        {messages.map((m,i)=>(
-          <div key={i} className={m.role==='user'?'text-right':''}>
-            <div className={"inline-block px-3 py-2 rounded " + (m.role==='user'?'bg-zinc-800 text-white':'bg-zinc-100')}>
-              {m.content}
             </div>
           </div>
         ))}
+        
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Elemento invisível para scroll automático */}
+        <div ref={messagesEndRef} />
       </div>
-      <div className="p-3 flex gap-2 border-t border-zinc-200">
-        <input className="flex-1 border rounded px-2 py-1" value={input} onChange={e=>setInput(e.target.value)} placeholder="Ask about this formula..." />
-        <button className="px-3 py-1 rounded bg-black text-white" onClick={onSend}>Send</button>
+
+      {/* Input area */}
+      <div className="border-t border-zinc-200 p-4">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if (input.trim()) {
+            sendMessage({ text: input });
+            setInput('');
+          }
+        }} className="flex gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Pergunte sobre esta fórmula..."
+            className="flex-1 border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            disabled={isLoading}
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !input.trim()}
+            className="px-4 py-2 bg-gradient-to-r from-green-500 to-orange-500 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity text-sm font-medium"
+          >
+            Enviar
+          </button>
+        </form>
       </div>
     </div>
   );

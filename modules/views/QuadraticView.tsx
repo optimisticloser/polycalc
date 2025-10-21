@@ -1,19 +1,18 @@
 'use client';
 import InlineVar from '@/components/InlineVar';
-import VariableInfoPanel from '@/components/VariableInfoPanel';
 import CanvasQuadratic from '@/components/CanvasQuadratic';
+import ResponsiveCanvas from '@/components/ResponsiveCanvas';
 import ControlsQuadratic from '@/components/ControlsQuadratic';
 import ExplodedFormula from '@/components/ExplodedFormula';
 import ExplodedModeToggle from '@/components/ExplodedModeToggle';
+import ScenarioManager from '@/components/ScenarioManager';
 import { useFormulaStore } from '@/lib/state/store';
 import FormulaLine from '@/components/FormulaLine';
 import { useFormulaMeta } from '@/lib/hooks/useFormulaMeta';
 
 export default function QuadraticView() {
   const { vars, setVar, formulaId, explodedMode } = useFormulaStore();
-  // Importar diretamente os metadados para evitar problemas com o hook
-  const { quadraticMeta } = require('@/lib/meta/formula-meta');
-  const formulaMeta = quadraticMeta;
+  const formulaMeta = useFormulaMeta('quadratic');
   
   return (
     <div className="space-y-4">
@@ -22,13 +21,13 @@ export default function QuadraticView() {
         <ExplodedModeToggle />
       </div>
       
-      {explodedMode ? (
+      {explodedMode && formulaMeta ? (
         <ExplodedFormula
           meta={formulaMeta}
           vars={vars}
           onVarChange={setVar}
         />
-      ) : (
+      ) : formulaMeta ? (
         <div className="text-lg flex flex-wrap items-center gap-2">
           y =
           <InlineVar
@@ -49,12 +48,14 @@ export default function QuadraticView() {
             onChange={v => setVar('c', v)}
           />
         </div>
-      )}
+      ) : null}
       
       <FormulaLine className="text-base text-zinc-700" />
-      <CanvasQuadratic />
+      <ResponsiveCanvas>
+        {(width, height) => <CanvasQuadratic width={width} height={height} />}
+      </ResponsiveCanvas>
       <ControlsQuadratic />
-      <VariableInfoPanel />
+      <ScenarioManager />
     </div>
   );
 }

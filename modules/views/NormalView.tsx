@@ -5,38 +5,60 @@ import CanvasNormal from '@/components/CanvasNormal';
 import ControlsNormal from '@/components/ControlsNormal';
 import FormulaLine from '@/components/FormulaLine';
 import { useFormulaStore } from '@/lib/state/store';
+import ExplodedFormula from '@/components/ExplodedFormula';
+import ExplodedModeToggle from '@/components/ExplodedModeToggle';
+import ScenarioManager from '@/components/ScenarioManager';
+import VariableInfoPanel from '@/components/VariableInfoPanel';
+import { useFormulaMeta } from '@/lib/hooks/useFormulaMeta';
 
 export default function NormalView() {
-  const { vars, setVar } = useFormulaStore();
+  const { vars, setVar, explodedMode } = useFormulaStore();
+  const formulaMeta = useFormulaMeta('normal');
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 text-lg">
-        μ =
-        <NumberChip
-          value={vars.mu ?? 0}
-          onChange={(v) => setVar('mu', v)}
-          label="μ"
-          min={-5}
-          max={5}
-          step={0.1}
-        />
-        σ =
-        <NumberChip
-          value={vars.sigma ?? 1}
-          onChange={(v) => setVar('sigma', v)}
-          label="σ"
-          min={0.5}
-          max={3}
-          step={0.05}
-        />
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Normal Distribution</h2>
+        <ExplodedModeToggle />
       </div>
+      
+      {explodedMode && formulaMeta ? (
+        <ExplodedFormula
+          meta={formulaMeta}
+          vars={vars}
+          onVarChange={setVar}
+        />
+      ) : (
+        <div className="flex flex-wrap items-center gap-2 text-lg">
+          μ =
+          <NumberChip
+            value={vars.mu ?? 0}
+            onChange={(v) => setVar('mu', v)}
+            label="μ"
+            min={-5}
+            max={5}
+            step={0.1}
+          />
+          σ =
+          <NumberChip
+            value={vars.sigma ?? 1}
+            onChange={(v) => setVar('sigma', v)}
+            label="σ"
+            min={0.5}
+            max={3}
+            step={0.05}
+          />
+        </div>
+      )}
+      
       <FormulaLine className="text-base text-zinc-700" />
       <CanvasNormal />
       <p className="text-sm text-zinc-600">
         Drag the orange markers to shade an interval and see the probability mass.
       </p>
       <ControlsNormal />
+      <VariableInfoPanel />
+      <ScenarioManager />
     </div>
   );
 }

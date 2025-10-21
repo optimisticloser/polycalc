@@ -22,10 +22,19 @@ export default function ExplodedFormula({
   // Usa as variáveis passadas como props ou do store
   const currentVars = vars || storeVars;
   
+  // Garante que o callback de mudança sempre use o setVar do store
+  const handleVarChange = (varId: string, value: number) => {
+    if (onVarChange) {
+      onVarChange(varId, value);
+    } else {
+      setVar(varId, value);
+    }
+  };
+  
   // Renderiza a fórmula em modo explodido
   const renderExplodedFormula = useMemo(() => {
-    return renderExplodedView(meta, currentVars, onVarChange || setVar, setHoveredVar);
-  }, [meta, currentVars, onVarChange, setVar, setHoveredVar]);
+    return renderExplodedView(meta, currentVars, handleVarChange, setHoveredVar);
+  }, [meta, currentVars, handleVarChange, setHoveredVar]);
   
   return (
     <div className={`exploded-formula-container ${className || ''}`}>
@@ -68,12 +77,14 @@ function renderExplodedView(
   let lastIndex = 0;
   let match;
   
-  // Extrai as variáveis da fórmula
+  // Extrai as variáveis da fórmula (deduplicadas)
   const variables: Array<{id: string, meta: any, value: number}> = [];
+  const seenVars = new Set<string>();
   
   while ((match = varPattern.exec(formula)) !== null) {
     const varId = match[1];
-    if (meta.variables[varId]) {
+    if (meta.variables[varId] && !seenVars.has(varId)) {
+      seenVars.add(varId);
       variables.push({
         id: varId,
         meta: meta.variables[varId],

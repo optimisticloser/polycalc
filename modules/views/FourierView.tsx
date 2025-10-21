@@ -6,16 +6,22 @@ import CanvasFourier from '@/components/CanvasFourier';
 import ControlsFourier from '@/components/ControlsFourier';
 import FormulaLine from '@/components/FormulaLine';
 import { useFormulaStore } from '@/lib/state/store';
+import ExplodedFormula from '@/components/ExplodedFormula';
+import ExplodedModeToggle from '@/components/ExplodedModeToggle';
+import ScenarioManager from '@/components/ScenarioManager';
+import VariableInfoPanel from '@/components/VariableInfoPanel';
+import { useFormulaMeta } from '@/lib/hooks/useFormulaMeta';
 
 const BASE_FREQUENCY = 180;
 
 export default function FourierView() {
-  const { vars, setVar } = useFormulaStore();
+  const { vars, setVar, explodedMode } = useFormulaStore();
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
   const [audioOn, setAudioOn] = useState(false);
   const [audioHint, setAudioHint] = useState<string | null>(null);
+  const formulaMeta = useFormulaMeta('fourier');
 
   const stopAudio = () => {
     if (oscillatorRef.current) {
@@ -104,27 +110,41 @@ export default function FourierView() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 text-lg">
-        N =
-        <NumberChip
-          value={N}
-          onChange={(v) => setVar('N', Math.round(v))}
-          label="N"
-          step={1}
-          min={1}
-          max={25}
-          decimals={0}
-        />
-        f₀ =
-        <NumberChip
-          value={f0}
-          onChange={(v) => setVar('f0', v)}
-          label="f0"
-          min={1}
-          max={5}
-          step={0.1}
-        />
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Fourier Series</h2>
+        <ExplodedModeToggle />
       </div>
+      
+      {explodedMode && formulaMeta ? (
+        <ExplodedFormula
+          meta={formulaMeta}
+          vars={vars}
+          onVarChange={setVar}
+        />
+      ) : (
+        <div className="flex flex-wrap items-center gap-2 text-lg">
+          N =
+          <NumberChip
+            value={N}
+            onChange={(v) => setVar('N', Math.round(v))}
+            label="N"
+            step={1}
+            min={1}
+            max={25}
+            decimals={0}
+          />
+          f₀ =
+          <NumberChip
+            value={f0}
+            onChange={(v) => setVar('f0', v)}
+            label="f0"
+            min={1}
+            max={5}
+            step={0.1}
+          />
+        </div>
+      )}
+      
       <FormulaLine className="text-base text-zinc-700" />
       <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
         <button
@@ -141,6 +161,8 @@ export default function FourierView() {
         Increase N to see the square wave emerge and notice the persistent Gibbs overshoot near jumps.
       </p>
       <ControlsFourier />
+      <VariableInfoPanel />
+      <ScenarioManager />
     </div>
   );
 }

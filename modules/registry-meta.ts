@@ -1,6 +1,6 @@
 import type { Vars } from '@/lib/state/store';
 import type { FormulaMeta as DetailedFormulaMeta } from '@/lib/types/variable';
-import { quadraticMeta, predatorPreyMeta } from '@/lib/meta/formula-meta';
+import { quadraticMeta, predatorPreyMeta, projectileMeta, sineMeta } from '@/lib/meta/formula-meta';
 
 export type Preset = { id: string; title: string; vars: Vars };
 
@@ -34,6 +34,7 @@ export const registryMeta: FormulaMeta[] = [
       { id: '45deg', title: '45°', vars: { theta: Math.PI / 4 } },
       { id: '60deg', title: '60°', vars: { theta: Math.PI / 3 } },
     ],
+    detailedMeta: projectileMeta,
   },
   {
     id: 'sine',
@@ -44,6 +45,7 @@ export const registryMeta: FormulaMeta[] = [
       { id: 'big-amplitude', title: 'A = 3', vars: { A: 3 } },
       { id: 'phase-shift', title: 'Phase shift', vars: { phi: Math.PI / 4 } },
     ],
+    detailedMeta: sineMeta,
   },
   {
     id: 'normal',
