@@ -4,20 +4,21 @@ import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
 import { useFormulaStore } from '@/lib/state/store';
 import { useFormulaMeta } from '@/lib/hooks/useFormulaMeta';
-import { lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
+import { lastAssistantMessageIsCompleteWithToolCalls, DefaultChatTransport } from 'ai';
 import MarkdownRenderer from './MarkdownRenderer';
 
 export default function ChatPanel() {
   const { formulaId, vars, setVar, setMany, pushAction } = useFormulaStore();
-  const formulaMetaResult = useFormulaMeta(formulaId);
-  const formulaMeta = formulaMetaResult?.meta || null;
+  const formulaMeta = useFormulaMeta(formulaId);
   
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const { messages, sendMessage, isLoading, addToolResult } = useChat({
-    api: '/api/chat',
-    body: { formulaId },
+  const { messages, sendMessage, status, addToolResult } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      body: { formulaId },
+    }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     onToolCall: async ({ toolCall }) => {
       console.log('Tool call recebido:', toolCall);
@@ -55,7 +56,7 @@ export default function ChatPanel() {
   // Scroll automático para baixo quando há novas mensagens ou quando está carregando
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+  }, [messages, status]);
 
   return (
     <div className="flex flex-col h-full border-l border-zinc-200">
@@ -110,7 +111,7 @@ export default function ChatPanel() {
           </div>
         ))}
         
-        {isLoading && (
+        {(status === 'submitted' || status === 'streaming') && (
           <div className="flex justify-start">
             <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg">
               <div className="flex space-x-1">
@@ -140,11 +141,11 @@ export default function ChatPanel() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Pergunte sobre esta fórmula..."
             className="flex-1 border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            disabled={isLoading}
+            disabled={status !== 'ready'}
           />
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
+            disabled={status !== 'ready' || !input.trim()}
             className="px-4 py-2 bg-gradient-to-r from-green-500 to-orange-500 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity text-sm font-medium"
           >
             Enviar

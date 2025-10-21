@@ -25,7 +25,7 @@ export function getFormulaContext(formulaId: string) {
   const enrichedPrompt = `${context.systemPrompt}
 
 Fórmula: ${meta?.title || formulaId}
-Descrição: ${meta?.description || 'N/A'}
+Descrição: ${meta?.detailedMeta?.description || 'N/A'}
 
 Variáveis disponíveis:
 ${Object.entries(meta?.defaults || {})

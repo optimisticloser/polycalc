@@ -1,8 +1,7 @@
-import { openai } from '@ai-sdk/openai';
-import { createOpenAI } from 'ai';
+import { openai, createOpenAI } from '@ai-sdk/openai';
 
 // Configuração do provider de IA
-export const aiProvider = openai({
+export const aiProvider = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.PRIMARY_API_KEY,
   baseURL: process.env.OPENAI_BASE_URL || process.env.PRIMARY_BASE_URL,
 });
