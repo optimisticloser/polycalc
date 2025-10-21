@@ -1,13 +1,12 @@
 'use client';
 import NumberChip from '@/components/NumberChip';
-import CanvasProjectile from '@/components/CanvasProjectile';
+import CanvasProjectilePixi from '@/components/CanvasProjectilePixi';
 import ControlsProjectile from '@/components/ControlsProjectile';
 import { useFormulaStore } from '@/lib/state/store';
 import FormulaLine from '@/components/FormulaLine';
 import ExplodedFormula from '@/components/ExplodedFormula';
 import ExplodedModeToggle from '@/components/ExplodedModeToggle';
 import ScenarioManager from '@/components/ScenarioManager';
-import VariableInfoPanel from '@/components/VariableInfoPanel';
 import { useFormulaMeta } from '@/lib/hooks/useFormulaMeta';
 
 export default function ProjectileView() {
@@ -36,9 +35,8 @@ export default function ProjectileView() {
       )}
       
       <FormulaLine className="text-base text-zinc-700" />
-      <CanvasProjectile />
+        <CanvasProjectilePixi />
       <ControlsProjectile />
-      <VariableInfoPanel />
       <ScenarioManager />
     </div>
   );

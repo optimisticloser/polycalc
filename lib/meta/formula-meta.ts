@@ -427,7 +427,7 @@ export const projectileMeta: FormulaMeta = {
   title: 'Projectile Motion',
   description: 'Motion of an object under the influence of gravity',
   
-  template: 'x(t) = {{v0}} cos({{theta}}) t, y(t) = {{v0}} sin({{theta}}) t - ½ g t²',
+  template: 'x(t) = {{v0}} cos({{theta}}) t, y(t) = {{v0}} sin({{theta}}) t - ½ {{g}} t²',
   
   variables: {
     v0: {

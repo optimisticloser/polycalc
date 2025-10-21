@@ -5,7 +5,6 @@ import CanvasSine from '@/components/CanvasSine';
 import ControlsSine from '@/components/ControlsSine';
 import ExplodedFormula from '@/components/ExplodedFormula';
 import ExplodedModeToggle from '@/components/ExplodedModeToggle';
-import VariableInfoPanel from '@/components/VariableInfoPanel';
 import { useFormulaStore } from '@/lib/state/store';
 import { useFormulaMeta } from '@/lib/hooks/useFormulaMeta';
 
@@ -166,7 +165,6 @@ export default function SineView() {
       </div>
       <CanvasSine />
       <ControlsSine />
-      <VariableInfoPanel />
     </div>
   );
 }

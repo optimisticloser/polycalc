@@ -1,7 +1,7 @@
 'use client';
 import InlineVar from '@/components/InlineVar';
-import VariableInfoPanel from '@/components/VariableInfoPanel';
 import CanvasQuadratic from '@/components/CanvasQuadratic';
+import ResponsiveCanvas from '@/components/ResponsiveCanvas';
 import ControlsQuadratic from '@/components/ControlsQuadratic';
 import ExplodedFormula from '@/components/ExplodedFormula';
 import ExplodedModeToggle from '@/components/ExplodedModeToggle';
@@ -51,9 +51,10 @@ export default function QuadraticView() {
       ) : null}
       
       <FormulaLine className="text-base text-zinc-700" />
-      <CanvasQuadratic />
+      <ResponsiveCanvas>
+        {(width, height) => <CanvasQuadratic width={width} height={height} />}
+      </ResponsiveCanvas>
       <ControlsQuadratic />
-      <VariableInfoPanel />
       <ScenarioManager />
     </div>
   );

@@ -77,12 +77,14 @@ function renderExplodedView(
   let lastIndex = 0;
   let match;
   
-  // Extrai as variáveis da fórmula
+  // Extrai as variáveis da fórmula (deduplicadas)
   const variables: Array<{id: string, meta: any, value: number}> = [];
+  const seenVars = new Set<string>();
   
   while ((match = varPattern.exec(formula)) !== null) {
     const varId = match[1];
-    if (meta.variables[varId]) {
+    if (meta.variables[varId] && !seenVars.has(varId)) {
+      seenVars.add(varId);
       variables.push({
         id: varId,
         meta: meta.variables[varId],

@@ -14,14 +14,23 @@
     "test:ui": "vitest"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.53",
+    "@ai-sdk/react": "^2.0.76",
+    "@pixi/react": "^8.0.3",
+    "ai": "^5.0.76",
     "clsx": "2.1.1",
     "d3-array": "3.2.4",
     "d3-scale": "4.0.2",
     "d3-shape": "3.2.0",
     "katex": "0.16.9",
     "next": "15.5.4",
+    "pixi.js": "^8.14.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
+    "zod": "^4.1.12",
     "zustand": "4.5.2"
   },
   "devDependencies": {
