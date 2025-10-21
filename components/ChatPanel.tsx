@@ -60,8 +60,8 @@ export default function ChatPanel() {
 
   return (
     <div className="flex flex-col h-full border-l border-zinc-200">
-      {/* Header com gradiente verde-laranja */}
-      <div className="bg-gradient-to-r from-green-500 to-orange-500 text-white p-4">
+      {/* Header com estilo do projeto */}
+      <div className="bg-rose-500 text-white p-4">
         <h3 className="font-semibold text-lg">Tutor de Matemática</h3>
         <p className="text-sm opacity-90 mt-1">
           {formulaMeta?.title || 'Fórmula Atual'}
@@ -140,13 +140,13 @@ export default function ChatPanel() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Pergunte sobre esta fórmula..."
-            className="flex-1 border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="flex-1 border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
             disabled={status !== 'ready'}
           />
           <button
             type="submit"
             disabled={status !== 'ready' || !input.trim()}
-            className="px-4 py-2 bg-gradient-to-r from-green-500 to-orange-500 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity text-sm font-medium"
+            className="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
           >
             Enviar
           </button>
